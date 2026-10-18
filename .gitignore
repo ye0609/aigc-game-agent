@@ -1,0 +1,30 @@
+# secrets and local settings
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# dependencies and build output
+node_modules/
+dist/
+build/
+.venv/
+__pycache__/
+*.py[cod]
+
+# local IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# large local assets
+*.zip
+*.7z
+*.tar
+*.tar.gz
+*.mp4
+*.mov
+*.wav
+*.flac
