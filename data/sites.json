@@ -1,6 +1,6 @@
 [
   {
-    "siteId": "gaoqiao-mangrove",
+    "siteId": "gaoqiao",
     "name": "高桥红树林",
     "latitude": 21.561075,
     "longitude": 109.75937,
@@ -10,7 +10,7 @@
     "birdWatchingShelters": []
   },
   {
-    "siteId": "texing-island",
+    "siteId": "texing",
     "name": "特呈岛红树林",
     "latitude": 21.159749,
     "longitude": 110.428452,
@@ -20,7 +20,7 @@
     "birdWatchingShelters": []
   },
   {
-    "siteId": "jinniu-island",
+    "siteId": "jinniu",
     "name": "金牛岛红树林",
     "latitude": 21.081841,
     "longitude": 110.256817,

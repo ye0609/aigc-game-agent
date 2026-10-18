@@ -20,7 +20,7 @@ ALLOWED_FIELDS = {
     "route",
     "birdWatchingShelters",
 }
-EXPECTED_IDS = {"gaoqiao-mangrove", "texing-island", "jinniu-island"}
+EXPECTED_IDS = {"gaoqiao", "texing", "jinniu"}
 ZHANJIANG_LAT = (20.0, 21.8)
 ZHANJIANG_LON = (109.5, 110.8)
 

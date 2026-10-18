@@ -12,9 +12,9 @@
 
 | siteId | 名称 | 公开来源 | 原始中心（BD-09） | WGS-84（本仓库） | 已核实 | 尚未核实 |
 |---|---|---|---|---|---|---|
-| `gaoqiao-mangrove` | 高桥红树林 | [百度百科：高桥红树林保护区](https://wapbaike.baidu.com/item/%E9%AB%98%E6%A1%A5%E7%BA%A2%E6%A0%91%E6%9E%97%E4%BF%9D%E6%8A%A4%E5%8C%BA)、[CERN 湿地条目](https://wiki.biodiversity.cern.ac.cn/index.php?title=%E6%B9%9B%E6%B1%9F%E5%B8%82%E9%AB%98%E6%A1%A5%E7%BA%A2%E6%A0%91%E6%9E%97%E6%B9%BF%E5%9C%B0)、[OSM relation 7610416](https://www.openstreetmap.org/relation/7610416) | 109.770194, 21.564385 | 109.759370, 21.561075 | 站点中心、800 米栈道、瞭望塔、观鸟亭/观林亭的名称 | 栈道拐点、瞭望塔和观鸟亭的精确坐标 |
-| `texing-island` | 特呈岛红树林 | [百度百科：特呈岛](https://wapbaike.baidu.com/item/%E7%89%B9%E5%91%88%E5%B2%9B/8161704)、[特呈岛游记（600 米栈道/两端亭台）](https://www.meipian.cn/5nc6j9f3)、[OSM way 13946986](https://www.openstreetmap.org/way/13946986) | 110.439508, 21.163333 | 110.428452, 21.159749 | 站点中心、600 米栈道、两条栈道尽头的观鸟亭/观鸟台 | 栈道入口、分叉点、两个端点的精确坐标 |
-| `jinniu-island` | 金牛岛红树林 | [百度百科：金牛岛红树林](https://wapbaike.baidu.com/item/%E9%87%91%E7%89%9B%E5%B2%9B%E7%BA%A2%E6%A0%91%E6%9E%97)、[广东省林业局报道](https://lyj.gd.gov.cn/news/newspaper/content/post_4221586.html)、[OSM relation 17431403](https://www.openstreetmap.org/relation/17431403) | 110.267574, 21.085486 | 110.256817, 21.081841 | 站点中心、科普广场、栈道码头、观鸟平台；位置在麻章区湖光镇世乔村 | 栈道入口、码头、观鸟平台的精确坐标 |
+| `gaoqiao` | 高桥红树林 | [百度百科：高桥红树林保护区](https://wapbaike.baidu.com/item/%E9%AB%98%E6%A1%A5%E7%BA%A2%E6%A0%91%E6%9E%97%E4%BF%9D%E6%8A%A4%E5%8C%BA)、[CERN 湿地条目](https://wiki.biodiversity.cern.ac.cn/index.php?title=%E6%B9%9B%E6%B1%9F%E5%B8%82%E9%AB%98%E6%A1%A5%E7%BA%A2%E6%A0%91%E6%9E%97%E6%B9%BF%E5%9C%B0)、[OSM relation 7610416](https://www.openstreetmap.org/relation/7610416) | 109.770194, 21.564385 | 109.759370, 21.561075 | 站点中心、800 米栈道、瞭望塔、观鸟亭/观林亭的名称 | 栈道拐点、瞭望塔和观鸟亭的精确坐标 |
+| `texing` | 特呈岛红树林 | [百度百科：特呈岛](https://wapbaike.baidu.com/item/%E7%89%B9%E5%91%88%E5%B2%9B/8161704)、[特呈岛游记（600 米栈道/两端亭台）](https://www.meipian.cn/5nc6j9f3)、[OSM way 13946986](https://www.openstreetmap.org/way/13946986) | 110.439508, 21.163333 | 110.428452, 21.159749 | 站点中心、600 米栈道、两条栈道尽头的观鸟亭/观鸟台 | 栈道入口、分叉点、两个端点的精确坐标 |
+| `jinniu` | 金牛岛红树林 | [百度百科：金牛岛红树林](https://wapbaike.baidu.com/item/%E9%87%91%E7%89%9B%E5%B2%9B%E7%BA%A2%E6%A0%91%E6%9E%97)、[广东省林业局报道](https://lyj.gd.gov.cn/news/newspaper/content/post_4221586.html)、[OSM relation 17431403](https://www.openstreetmap.org/relation/17431403) | 110.267574, 21.085486 | 110.256817, 21.081841 | 站点中心、科普广场、栈道码头、观鸟平台；位置在麻章区湖光镇世乔村 | 栈道入口、码头、观鸟平台的精确坐标 |
 
 ## 为什么 `route` 和 `birdWatchingShelters` 还是空数组
 
