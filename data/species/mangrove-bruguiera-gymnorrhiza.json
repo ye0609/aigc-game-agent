@@ -1,0 +1,22 @@
+{
+  "speciesId": "mangrove-bruguiera-gymnorrhiza",
+  "name": "木榄",
+  "aliases": ["五梨蛟", "鸡爪榄"],
+  "category": "mangrove",
+  "protectionLevel": "未列入《国家重点保护野生植物名录》（2021）；IUCN 红色名录：无危（LC）",
+  "images": ["assets/species/mangrove-bruguiera-gymnorrhiza/main.jpg"],
+  "description": {
+    "habitat": "生长在潮间带中高潮位的泥滩和河口内湾，常位于红树林靠陆一侧，潮水淹没时间相对较短，底质多为淤泥。",
+    "behavior": "红树科木榄属乔木，高可达 10 米以上；具膝状呼吸根，适应缺氧淤泥。果实仍在母树上时胚轴就开始伸长，成熟后脱落插入泥滩，属于胎生繁殖。",
+    "conservation": "全球种群稳定，IUCN 列为无危；红树林湿地受《中华人民共和国湿地保护法》保护，主要威胁是围垦、养殖塘扩张、污染和海岸工程。保护重点是保留成熟林和潮汐通道，并用本地种苗开展修复。"
+  },
+  "audio": {
+    "birdCall": null,
+    "explanation": "assets/audio/mangrove-bruguiera-gymnorrhiza/zh-CN.mp3"
+  },
+  "languages": {
+    "zh-CN": "木榄是红树林里比较高大的树种，最特别的是从泥里拱起的膝状呼吸根。它的果实还在树上时就开始发芽，掉进泥滩后能很快扎根。",
+    "zh-HK": "木欖係紅樹林入面比較高大嘅樹種，最特別係由泥面拱起嘅膝狀呼吸根。佢嘅果實仲喺樹上就已經發芽，跌落泥灘就好快扎根。",
+    "en-US": "Bruguiera gymnorhiza, known in Chinese as mulan, is one of the taller trees in the mangrove forest. Its knee-like aerial roots rise from the mud, and its seedlings begin to grow while still attached to the parent tree."
+  }
+}

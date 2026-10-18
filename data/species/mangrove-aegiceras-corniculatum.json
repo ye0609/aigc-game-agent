@@ -1,0 +1,22 @@
+{
+  "speciesId": "mangrove-aegiceras-corniculatum",
+  "name": "桐花树",
+  "aliases": ["蜡烛果", "黑脚梗"],
+  "category": "mangrove",
+  "protectionLevel": "未列入《国家重点保护野生植物名录》（2021）；IUCN 红色名录：无危（LC）",
+  "images": ["assets/species/mangrove-aegiceras-corniculatum/main.jpg"],
+  "description": {
+    "habitat": "生长在河口、潮沟和潮间带外缘的泥滩，常与白骨壤等先锋树种混生，耐盐、耐淹，是红树林向海扩展的前缘物种之一。",
+    "behavior": "报春花科（曾归紫金牛科）蜡烛果属灌木或小乔木，高可达 7 米；叶互生、倒卵形、革质。花白色、芳香，成伞形花序；果实弯曲呈角状。种子在母树上萌发，属胎生繁殖。",
+    "conservation": "全球种群稳定，IUCN 列为无危；红树林湿地受《中华人民共和国湿地保护法》保护，主要威胁是围垦、养殖塘扩张和污染。桐花树是固滩促淤的先锋种，可用于潮间带修复，但需保留自然潮汐水文。"
+  },
+  "audio": {
+    "birdCall": null,
+    "explanation": "assets/audio/mangrove-aegiceras-corniculatum/zh-CN.mp3"
+  },
+  "languages": {
+    "zh-CN": "桐花树开着白色小花，果实弯弯的像小角，所以也叫蜡烛果。它常长在红树林最靠海的一侧，是固滩促淤的先锋树种。",
+    "zh-HK": "桐花樹開白色細花，果實彎彎哋似隻角，所以又叫蠟燭果。佢成日生喺紅樹林最靠海嗰邊，係固灘促淤嘅先鋒樹種。",
+    "en-US": "Aegiceras corniculatum, known in Chinese as tonghuashu, has small white flowers and curved, horn-shaped fruit. It often grows at the seaward edge of the mangrove forest and helps stabilize mudflats."
+  }
+}
