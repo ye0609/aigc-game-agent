@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mangrove species",
+  "type": "object",
+  "required": ["speciesId", "name", "category", "protectionLevel", "images", "description", "audio"],
+  "properties": {
+    "speciesId": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+    "name": {"type": "string"},
+    "aliases": {"type": "array", "items": {"type": "string"}},
+    "category": {"enum": ["mangrove", "bird", "benthic"]},
+    "protectionLevel": {"type": "string"},
+    "images": {"type": "array", "items": {"type": "string"}},
+    "description": {
+      "type": "object",
+      "required": ["habitat", "behavior", "conservation"],
+      "properties": {
+        "habitat": {"type": "string"},
+        "behavior": {"type": "string"},
+        "conservation": {"type": "string"}
+      }
+    },
+    "audio": {
+      "type": "object",
+      "properties": {
+        "birdCall": {"type": ["string", "null"]},
+        "explanation": {"type": ["string", "null"]}
+      }
+    },
+    "languages": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    }
+  }
+}

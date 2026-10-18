@@ -1,0 +1,22 @@
+{
+  "speciesId": "mangrove-rhizophora-apiculata",
+  "name": "木榄",
+  "aliases": [],
+  "category": "mangrove",
+  "protectionLevel": "待 C 校对",
+  "images": ["assets/species/mangrove-rhizophora-apiculata/main.jpg"],
+  "description": {
+    "habitat": "待 C 填写",
+    "behavior": "待 C 填写",
+    "conservation": "待 C 填写"
+  },
+  "audio": {
+    "birdCall": null,
+    "explanation": "assets/audio/mangrove-rhizophora-apiculata/zh-CN.mp3"
+  },
+  "languages": {
+    "zh-CN": "待 C 填写",
+    "zh-HK": "待 C 填写",
+    "en-US": "待 C 填写"
+  }
+}
