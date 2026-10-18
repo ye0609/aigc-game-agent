@@ -8,7 +8,7 @@
 - 请求和返回均使用 `application/json`，图片上传接口使用 `multipart/form-data`
 - 成功返回 HTTP 200；参数错误返回 400；未登录或无权限返回 401/403；请求体超过 15 MiB 返回 413；服务异常返回 500
 - 每个响应包含 `requestId`，便于联调排查
-- 本机默认服务地址只监听 `127.0.0.1`。如需手机局域网联调，后端设置 `HOST=0.0.0.0` 和 `API_TOKEN`，A 的请求需带 `Authorization: Bearer <API_TOKEN>`；不要把服务或 token 用于公网部署
+- 本机默认服务地址只监听 `127.0.0.1`。手机联调与二维码演示使用同域 HTTPS 反向代理：代理从环境变量读取 `API_TOKEN` 并添加 `Authorization: Bearer <API_TOKEN>`，后端仍监听本机，浏览器只请求 `/api`，不得在 `index.html` 中放 token。局域网直接调用后端时也可设置 `HOST=0.0.0.0` 和 `API_TOKEN`，但不得用于公开部署；具体配置见 `docs/deployment.md`
 
 ## 1. 物种识别
 

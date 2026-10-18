@@ -45,6 +45,8 @@ python backend/recognition/api.py
 
 本机默认绑定 `127.0.0.1:8000`。供手机在局域网联调时，可设置 `HOST=0.0.0.0` 和仅用于开发的 `API_TOKEN`；非本机地址未设置 token 时服务会拒绝启动，设置后每个 GET/POST 都需要 `Authorization: Bearer <API_TOKEN>`。图片请求体上限为 15 MiB。不要将服务直接暴露到公网，也不要把 token 提交到仓库。
 
+手机相机/GPS 联调优先使用同域 HTTPS 反向代理，由代理持有 token，后端仍监听 `127.0.0.1`；步骤与示例 Caddy 配置见 `docs/deployment.md`。前端代码不应保存 token。
+
 `confidence` 在此基线中只是按类别距离差构造的启发式分数，不是经过校准的概率。它可用于触发兜底，不能当作真实识别准确率；真实准确率只看独立验证集和现场测试。
 
 ## 当前阻塞
