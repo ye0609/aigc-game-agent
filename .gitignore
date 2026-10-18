@@ -28,3 +28,7 @@ Thumbs.db
 *.mov
 *.wav
 *.flac
+
+# generated recognition artifacts
+backend/recognition/artifacts/
+data/recognition/*/

@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import json
-import re
 import uuid
 from email.parser import BytesParser
 from email.policy import default
@@ -20,7 +19,7 @@ PORT = 8000
 
 MANGROVES = {
     "木榄": {
-        "speciesId": "mangrove-rhizophora-apiculata",
+        "speciesId": "mangrove-bruguiera-gymnorrhiza",
         "name": "木榄",
         "confidence": 0.92,
     },
@@ -85,7 +84,7 @@ def parse_multipart(raw: bytes, content_type: str):
         filename = part.get_filename()
         payload = part.get_payload(decode=True) or b""
         if filename:
-            files[name] = {"filename": filename, "size": len(payload)}
+            files[name] = {"filename": filename, "size": len(payload), "content": payload}
         else:
             fields[name] = payload.decode(part.get_content_charset() or "utf-8", errors="replace")
     fields["_files"] = files
@@ -103,7 +102,8 @@ def parse_body(handler: BaseHTTPRequestHandler):
 
 def choose_species(mode: str, fields: dict):
     groups = MANGROVES if mode == "mangrove" else BIRDS
-    filename = next(iter(fields.get("_files", {})), "")
+    image = fields.get("_files", {}).get("image", {})
+    filename = image.get("filename", "")
     for keyword, species in groups.items():
         if keyword in filename:
             return species
@@ -129,7 +129,11 @@ class MockHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_OPTIONS(self):
-        self.send_json(204, {})
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.end_headers()
 
     def do_GET(self):
         path = urlparse(self.path).path

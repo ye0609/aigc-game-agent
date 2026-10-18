@@ -29,7 +29,7 @@ mode: "mangrove" | "bird"（必填）
   "requestId": "req_demo_001",
   "success": true,
   "data": {
-    "speciesId": "mangrove-rhizophora-apiculata",
+    "speciesId": "mangrove-bruguiera-gymnorrhiza",
     "name": "木榄",
     "category": "mangrove",
     "confidence": 0.92,
@@ -42,6 +42,8 @@ mode: "mangrove" | "bird"（必填）
 
 识别不确定时返回 `success: true`、`fallbackRequired: true`，前端展示手动选物种和 GPS 点位卡片。
 
+模型未就绪时返回同一结构，但 `speciesId`、`name` 为 `null`，`confidence` 为 `0.0`；此时前端必须使用手动选择，不得把返回结果当成真实识别。
+
 ## 2. RAG 问答
 
 `POST /knowledge/ask`
@@ -52,7 +54,7 @@ mode: "mangrove" | "bird"（必填）
 {
   "question": "为什么红树林能防风浪？",
   "language": "zh-CN",
-  "contextSpeciesId": "mangrove-rhizophora-apiculata"
+  "contextSpeciesId": "mangrove-bruguiera-gymnorrhiza"
 }
 ```
 
@@ -78,7 +80,7 @@ mode: "mangrove" | "bird"（必填）
 
 ```json
 {
-  "speciesId": "mangrove-rhizophora-apiculata",
+  "speciesId": "mangrove-bruguiera-gymnorrhiza",
   "language": "zh-CN",
   "audience": "student"
 }

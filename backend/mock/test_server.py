@@ -2,21 +2,25 @@ import unittest
 import json
 from pathlib import Path
 
-from server import MockHandler, MANGROVES
+from server import MockHandler, MANGROVES, choose_species
 
 
 class ContractSmokeTest(unittest.TestCase):
     def test_species_catalog_has_four_mangroves(self):
         self.assertEqual(len(MANGROVES), 4)
 
+    def test_mock_uses_uploaded_image_filename(self):
+        species = choose_species("mangrove", {"_files": {"image": {"filename": "秋茄.jpg"}}})
+        self.assertEqual(species["name"], "秋茄")
+
     def test_all_contract_endpoints_return_the_shared_envelope(self):
         handler = object.__new__(MockHandler)
         calls = [
             ("/api/recognition/species", {"mode": "mangrove", "_files": {"image": {"filename": "秋茄.jpg"}}}),
             ("/api/knowledge/ask", {"question": "为什么红树林能防风浪？"}),
-            ("/api/knowledge/explain", {"speciesId": "mangrove-rhizophora-apiculata"}),
+            ("/api/knowledge/explain", {"speciesId": "mangrove-bruguiera-gymnorrhiza"}),
             ("/api/audio/tts", {"text": "欢迎来到红树林。", "language": "zh-CN"}),
-            ("/api/reports", {"type": "observation", "speciesId": "mangrove-rhizophora-apiculata", "latitude": "20.12", "longitude": "110.32"}),
+            ("/api/reports", {"type": "observation", "speciesId": "mangrove-bruguiera-gymnorrhiza", "latitude": "20.12", "longitude": "110.32"}),
         ]
         for path, fields in calls:
             with self.subTest(path=path):
