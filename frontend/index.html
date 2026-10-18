@@ -796,22 +796,6 @@ var SPECIES = [
   art:'<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="14" fill="#E9F2E3"/><path d="M0 86 Q30 80 52 84 Q78 78 100 85 L100 100 L0 100Z" fill="#C9A887"/><path d="M46 20 Q34 26 30 40" fill="none" stroke="#2F6B4F" stroke-width="3.4" stroke-linecap="round"/><path d="M54 22 Q64 28 68 40" fill="none" stroke="#2F6B4F" stroke-width="3.4" stroke-linecap="round"/><path d="M50 84 C50 64 48 50 51 34" fill="none" stroke="#2F6B4F" stroke-width="4.4" stroke-linecap="round"/><ellipse cx="28" cy="38" rx="8.5" ry="4.6" fill="#4C9E76" transform="rotate(-30 28 38)"/><ellipse cx="70" cy="38" rx="8.5" ry="4.6" fill="#4C9E76" transform="rotate(28 70 38)"/><ellipse cx="48" cy="26" rx="8.5" ry="4.6" fill="#57A773" transform="rotate(-8 48 26)"/><g stroke="#3D8A62" stroke-width="2.8" fill="none" stroke-linecap="round"><path d="M55 52 C58 59 58 67 57 76"/><path d="M57 50 C61 57 62 64 61 70"/></g></svg>'
 },
 {
-  id:"honghailan", name:"红海榄", latin:"Rhizophora stylosa", category:"plant",
-  level:"IUCN 无危（LC）· 受《湿地保护法》保护", levelClass:"l3",
-  intro:"支柱根发达的红树，从树干四周伸入泥中，像\"脚手架\"把树稳稳撑住，也为鱼虾蟹提供庇护所；同样采用胎生繁殖。",
-  facts:[
-    ["科属","红树科 红树属"],["识别特征","支柱根密集、成拱形"],["叶片","革质、对生、椭圆形"],
-    ["胎生苗","胚轴细长呈棍状"],["生态功能","育幼场：鱼虾蟹栖息"]
-  ],
-  call:"退潮水流 · 根系拍浪",
-  speak:{
-    zh:"红海榄的支柱根像脚手架一样伸进泥里，把树撑得很稳，小鱼小虾常在根丛里躲避天敌。",
-    yue:"紅海欖嘅支柱根好似棚架咁插喺泥度，樹企得好穩，細魚細蝦成日喺根叢入面避天敵。",
-    en:"Stylosa mangrove grows strong prop roots into the mud, like scaffolding. Young fish and crabs hide among the roots from predators."
-  },
-  art:'<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="14" fill="#E7F0E1"/><path d="M0 88 Q34 80 60 86 Q82 80 100 87 L100 100 L0 100Z" fill="#B98A6A"/><path d="M50 86 C50 66 48 48 52 26" fill="none" stroke="#2F6B4F" stroke-width="4.6" stroke-linecap="round"/><path d="M52 62 C38 58 30 54 24 46" fill="none" stroke="#2F6B4F" stroke-width="3.6" stroke-linecap="round"/><path d="M52 56 C66 52 74 46 78 36" fill="none" stroke="#2F6B4F" stroke-width="3.6" stroke-linecap="round"/><g fill="#4C9E76"><ellipse cx="22" cy="44" rx="9" ry="4.8" transform="rotate(-34 22 44)"/><ellipse cx="80" cy="34" rx="9" ry="4.8" transform="rotate(30 80 34)"/><ellipse cx="48" cy="20" rx="9" ry="4.8" transform="rotate(-6 48 20)"/></g><g stroke="#6B4A33" stroke-width="2.6" fill="none" stroke-linecap="round"><path d="M44 82 C40 84 36 86 33 89"/><path d="M56 82 C60 84 63 86 66 89"/><path d="M50 78 C49 81 48 84 48 87"/></g></svg>'
-},
-{
   id:"baiguniang", name:"白骨壤", latin:"Avicennia marina", category:"plant",
   level:"IUCN 无危（LC）· 受《湿地保护法》保护", levelClass:"l3",
   intro:"叶背银白、因而得名\"白骨壤\"。它的呼吸根像竹笋一样从泥滩竖起（指状根），帮根系在缺氧淤泥里\"喘气\"，是耐盐耐淹的先锋树种。",
@@ -1059,7 +1043,6 @@ var API_ID_MAP={
   qiujia:'mangrove-kandelia-obovata',
   baiguniang:'mangrove-avicennia-marina',
   mulan:'mangrove-bruguiera-gymnorrhiza',
-  honghailan:'mangrove-rhizophora-stylosa',
   tonghuashu:'mangrove-aegiceras-corniculatum',
   heilianpilu:'bird-black-faced-spoonbill',
   bailu:'bird-egretta-garzetta'
@@ -1527,10 +1510,18 @@ function bindEvents(){
         saveLocal(d.reportId||'');
         toast('上报已受理：'+(d.reportId||'ok'));
         if(!STATE.tasks.t4)markTask('t4');
-      }).catch(function(){
-        saveLocal('local');
-        toast('接口不可达，已本地保存上报');
-        if(!STATE.tasks.t4)markTask('t4');
+      }).catch(function(err){
+        var msg=(err&&err.message)||'';
+        if(msg.indexOf('HTTP ')===0){
+          // 业务错误（如 400 缺坐标）：不冒充成功，提示用户重试
+          $('#reportBtn').disabled=false;$('#reportBtn').textContent='重试上报';
+          toast('上报失败（'+msg+'），请开启定位后重试');
+        }else{
+          // 真连不上：本地保存
+          saveLocal('local');
+          toast('接口不可达，已本地保存上报');
+          if(!STATE.tasks.t4)markTask('t4');
+        }
       });
     };
     var gotPos=false;
