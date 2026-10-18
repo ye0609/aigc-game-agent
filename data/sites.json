@@ -1,0 +1,32 @@
+[
+  {
+    "siteId": "gaoqiao-mangrove",
+    "name": "高桥红树林",
+    "latitude": 21.561075,
+    "longitude": 109.75937,
+    "type": "trail",
+    "description": "湛江红树林国家级自然保护区核心区之一，位于廉江市高桥镇红树林大道。保护区内有约 800 米红树林栈道、16.8 米瞭望塔，以及观鸟亭、观林亭和停车场等设施；退潮时可观察秋茄、木榄、桐花树、白骨壤等红树。站点坐标为公开地图中心点，栈道拐点与观鸟屋精确坐标待现场 GPS 校准。",
+    "route": [],
+    "birdWatchingShelters": []
+  },
+  {
+    "siteId": "texing-island",
+    "name": "特呈岛红树林",
+    "latitude": 21.159749,
+    "longitude": 110.428452,
+    "type": "trail",
+    "description": "湛江湾中部的岛屿，东南沿海分布红树林古树群，建有约 600 米观光栈道，两条栈道尽头分别设观鸟亭和观鸟台。站点坐标为公开地图中心点，栈道与观鸟屋精确坐标待现场 GPS 校准。",
+    "route": [],
+    "birdWatchingShelters": []
+  },
+  {
+    "siteId": "jinniu-island",
+    "name": "金牛岛红树林",
+    "latitude": 21.081841,
+    "longitude": 110.256817,
+    "type": "trail",
+    "description": "湛江红树林国家级自然保护区东部片区，位于麻章区湖光镇世乔村。片区内设科普广场、栈道码头和带望远镜的观鸟平台，是勺嘴鹬等候鸟的重要越冬地。站点坐标为公开地图中心点，栈道与观鸟平台精确坐标待现场 GPS 校准。",
+    "route": [],
+    "birdWatchingShelters": []
+  }
+]
