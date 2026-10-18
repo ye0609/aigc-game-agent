@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import io
+import hashlib
 import json
 import zipfile
 from pathlib import Path
@@ -19,6 +20,15 @@ except ImportError:  # pragma: no cover - 在未安装训练依赖的电脑上�
 
 
 FEATURE_SIZE = 816
+
+
+def file_sha256(path: Path) -> str:
+    """Return the digest used to bind a metrics file to one model artifact."""
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def image_feature(image_bytes: bytes) -> np.ndarray:

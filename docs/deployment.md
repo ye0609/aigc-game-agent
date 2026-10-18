@@ -45,5 +45,5 @@
 ## 当前接口限制
 
 - `backend/recognition/api.py` 目前只提供四类红树的识别基线；无模型文件时返回 `fallbackRequired: true`。鸟类识别还没有真实模型。
-- 问答、讲解、TTS 和上报目前仍复用 mock；TTS 音频 URL 也是占位地址，上报没有持久化。它们可以用于接口联调，不能作为正式服务验收。
+- 问答、讲解、TTS 和上报目前仍复用 mock；TTS 返回 `audioUrl: null` 和 `fallbackRequired: true`，由浏览器语音兜底；上报没有持久化。它们可以用于接口联调，不能作为正式服务验收。
 - `POST /api/reports` 要求有效经纬度。GPS 获取失败时，前端应请求重试或提供人工选点，不能提交缺失坐标或 `0,0`。

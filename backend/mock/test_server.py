@@ -77,6 +77,13 @@ class ContractSmokeTest(unittest.TestCase):
                 self.assertEqual(status, 400)
                 self.assertFalse(result["success"])
 
+    def test_observation_reports_require_a_catalog_species(self):
+        handler = object.__new__(MockHandler)
+        fields = {"type": "observation", "speciesId": "benthic-unknown", "latitude": "20.1", "longitude": "110.2"}
+        status, result = handler.route("/api/reports", fields)
+        self.assertEqual(status, 400)
+        self.assertFalse(result["success"])
+
     def test_oversized_request_is_rejected_before_body_read(self):
         class FakeHandler:
             headers = {"Content-Length": "5", "Content-Type": "application/json"}

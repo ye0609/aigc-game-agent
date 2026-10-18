@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from classifier import CentroidClassifier, image_feature, write_metrics
+from classifier import CentroidClassifier, file_sha256, image_feature, write_metrics
 from dataset import load_group_manifest, validate_dataset
 
 
@@ -92,6 +92,7 @@ def train(root: Path, catalog: Path, output: Path, min_per_class: int, groups_pa
         "readyForDemo": validation_total > 0 and correct / validation_total >= 0.75,
     }
     model.save(output)
+    metrics["modelSha256"] = file_sha256(output)
     write_metrics(output.with_name("metrics.json"), metrics)
     return metrics
 

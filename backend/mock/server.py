@@ -53,6 +53,7 @@ BIRDS = {
     "白鹭": {"speciesId": "bird-egretta-garzetta", "name": "白鹭", "confidence": 0.86},
     "黑脸琵鹭": {"speciesId": "bird-black-faced-spoonbill", "name": "黑脸琵鹭", "confidence": 0.83},
 }
+VALID_REPORT_SPECIES = {item["speciesId"] for item in (*MANGROVES.values(), *BIRDS.values())}
 
 
 def request_id() -> str:
@@ -272,9 +273,12 @@ class MockHandler(BaseHTTPRequestHandler):
             if language not in ("zh-CN", "zh-HK", "en-US"):
                 return error("language 必须是 zh-CN、zh-HK 或 en-US")
             return response({
-                "audioUrl": f"https://example.invalid/audio/{request_id()}.mp3",
+                # Mock 不伪造可播放地址；前端收到 fallbackRequired 后使用浏览器 TTS。
+                "audioUrl": None,
                 "language": language,
                 "durationSeconds": max(2, min(60, len(text) // 4)),
+                "fallbackRequired": True,
+                "provider": "browser",
             })
 
         if path == "/api/reports":
@@ -287,6 +291,8 @@ class MockHandler(BaseHTTPRequestHandler):
                 return error("longitude 必须是 -180 到 180 之间的有限数字")
             if report_type == "observation" and not fields.get("speciesId"):
                 return error("observation 必须提供 speciesId")
+            if report_type == "observation" and fields["speciesId"] not in VALID_REPORT_SPECIES:
+                return error("speciesId 不在当前识别目录中")
             return response({"reportId": f"report_{uuid.uuid4().hex[:8]}", "status": "received"})
 
         return error("接口不存在", 404)

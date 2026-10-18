@@ -8,6 +8,7 @@
 - 请求和返回均使用 `application/json`，图片上传接口使用 `multipart/form-data`
 - 成功返回 HTTP 200；参数错误返回 400；未登录或无权限返回 401/403；请求体超过 15 MiB 返回 413；服务异常返回 500
 - 每个响应包含 `requestId`，便于联调排查
+- `POST /reports` 的 `observation.speciesId` 必须来自 `data/species.catalog.json` 中当前已接入识别的物种；尚未接入识别的本地展示物种不能上报
 - 本机默认服务地址只监听 `127.0.0.1`。手机联调与二维码演示使用同域 HTTPS 反向代理：代理从环境变量读取 `API_TOKEN` 并添加 `Authorization: Bearer <API_TOKEN>`，后端仍监听本机，浏览器只请求 `/api`，不得在 `index.html` 中放 token。局域网直接调用后端时也可设置 `HOST=0.0.0.0` 和 `API_TOKEN`，但不得用于公开部署；具体配置见 `docs/deployment.md`
 
 ## 1. 物种识别
@@ -123,15 +124,17 @@ mode: "mangrove" | "bird"（必填）
   "requestId": "req_demo_004",
   "success": true,
   "data": {
-    "audioUrl": "https://example.invalid/audio/req_demo_004.mp3",
+    "audioUrl": null,
     "language": "zh-CN",
-    "durationSeconds": 4
+    "durationSeconds": 4,
+    "fallbackRequired": true,
+    "provider": "browser"
   },
   "error": null
 }
 ```
 
-支持语言：`zh-CN`、`zh-HK`、`en-US`；雷州话固定短语使用预录音频。
+支持语言：`zh-CN`、`zh-HK`、`en-US`；雷州话固定短语使用预录音频。mock 阶段没有真实音频 URL，返回 `audioUrl: null` 和 `fallbackRequired: true`，前端应使用浏览器语音；接入真实 TTS 后再返回 HTTPS 音频地址。
 
 ## 5. 观测 / 垃圾上报
 

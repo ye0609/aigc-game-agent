@@ -513,7 +513,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
   <section class="view" id="view-map">
     <div class="page-head">
       <button class="back-btn" data-back="home" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
-      <div><div class="page-title">地图导览</div><div class="page-sub" style="color:#B4553A">示意地图 · 非实地导航，等 C 提供真实坐标后接入高德 / 腾讯 SDK</div></div>
+      <div><div class="page-title">地图导览</div><div class="page-sub" style="color:#B4553A">站点中心已核实 · 路线与观鸟屋待现场 GPS 采集</div></div>
       <span class="chip chip-sea" style="margin-left:auto">离线可用</span>
     </div>
 
@@ -594,7 +594,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
 
     <div class="card" id="siteDetail" style="display:none;margin-top:12px"></div>
 
-    <div class="demo-note">真实地图接入：在 <code>MAP_SDK_KEY</code> 填入高德 / 腾讯 key 后，可将此示意底图替换为 SDK 地图，点位 / 路线 / 观鸟屋 JSON 结构不变。</div>
+    <div class="demo-note">当前只展示站点中心和演示点位，不提供实地导航。现场采集路线后，由部署层配置高德 / 腾讯 SDK，页面代码和仓库中不保存 key。</div>
   </section>
 
   <!-- ===== 视图：时间轴复原 ===== -->
@@ -776,7 +776,8 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
    - SPECIES.art  ->  C 实拍图后改为 assets/species/<id>.jpg
    - SPECIES.call ->  C 鸟叫音频后改为 assets/audio/<id>.mp3
    ================================================================ */
-var MAP_SDK_KEY = ""; // TODO: 高德 / 腾讯地图 key，填入后接入真实地图
+// 地图 SDK key 由部署层注入，不能写入静态页面或提交到仓库。
+var MAP_SDK_KEY = "";
 
 var SPECIES = [
 {
@@ -940,20 +941,20 @@ var SPECIES = [
   art:'<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="14" fill="#F0E9DC"/><path d="M0 96 Q30 90 60 94 Q82 90 100 95 L100 100 L0 100Z" fill="#8A6A4A"/><path d="M22 96 Q30 82 26 72 M34 97 Q44 84 38 74" stroke="#9C6B4F" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M34 58 C40 46 52 40 62 42 C70 43 74 50 72 58 C70 64 62 68 52 66 C42 64 32 62 34 58 Z" fill="#7A6A58"/><g fill="#1B2A24"><circle cx="58" cy="44" r="3"/><circle cx="68" cy="42" r="3"/></g><circle cx="58" cy="43.4" r="1.2" fill="#fff"/><circle cx="68" cy="41.4" r="1.2" fill="#fff"/><path d="M34 60 C26 56 22 50 20 44 C22 42 26 42 30 44 C30 50 32 54 36 56" fill="#7A6A58"/><path d="M72 58 C80 56 86 52 90 46 C88 42 84 42 80 44 C82 50 78 54 74 56" fill="#7A6A58"/><circle cx="26" cy="44" r="2" fill="#2F6B4F"/><circle cx="84" cy="46" r="2" fill="#2F6B4F"/><path d="M44 62 L56 66" stroke="#3D5C4B" stroke-width="2" stroke-linecap="round"/></svg>'
 }
 ];
-/* ---------- 点位（坐标示意，待 C 校准后接入真实地图 SDK） ---------- */
+/* ---------- 站点中心（WGS-84；路线和观鸟屋坐标待现场采集） ---------- */
 var SITES = [
   { id:"gaoqiao", name:"高桥红树林", area:"廉江市 · 高桥镇", dist:"距市区约 60 km",
-    coords:"21.58°N, 109.75°E（示意）", color:"var(--pine)",
+    coords:"21.561075°N, 109.759370°E（站点中心）", color:"var(--pine)",
     desc:"连片面积全国前列的红树林保护区，观鸟屋可眺望成群鹭鸟，冬季是黑脸琵鹭与勺嘴鹬的驿站。",
-    points:["1 号观鸟屋","2 号观鸟屋","步道入口","科普牌"] },
+    points:[] },
   { id:"texing", name:"特呈岛", area:"霞山区 · 特呈岛", dist:"距市区约 8 km",
-    coords:"21.15°N, 110.40°E（示意）", color:"var(--sea)",
+    coords:"21.159749°N, 110.428452°E（站点中心）", color:"var(--sea)",
     desc:"湛江湾内的红树林公园岛，退潮后泥滩上招潮蟹、弹涂鱼活跃，适合亲子研学。",
-    points:["红树林公园入口","观鸟平台","滩涂观察点","科普牌"] },
+    points:[] },
   { id:"jinniu", name:"金牛岛", area:"雷州市 · 附城镇", dist:"距市区约 70 km",
-    coords:"20.95°N, 110.05°E（示意）", color:"var(--clay)",
+    coords:"21.081841°N, 110.256817°E（站点中心）", color:"var(--clay)",
     desc:"雷州半岛红树林修复示范点，可对比新造林与成熟林，了解蓝碳造林项目。",
-    points:["修复示范牌","步道","观鸟屋"] }
+    points:[] }
 ];
 /* ---------- 首页推荐路线 ---------- */
 var ROUTES = [
@@ -1038,7 +1039,6 @@ var API_BASE=(function(){
   if(h&&h!=='127.0.0.1'&&h!=='localhost')return '/api';
   return 'http://127.0.0.1:8000/api';
 })();
-var API_TOKEN=''; // B 发的 Bearer token，留空即不带；B 给了填这里
 var API_ID_MAP={
   qiujia:'mangrove-kandelia-obovata',
   baiguniang:'mangrove-avicennia-marina',
@@ -1051,7 +1051,6 @@ function langCode(l){return l==='yue'?'zh-HK':(l==='en'?'en-US':'zh-CN')}
 function apiPost(path,body,isForm){
   var opt={method:'POST',headers:{}};
   var url=API_BASE+path;
-  if(API_TOKEN)opt.headers['Authorization']='Bearer '+API_TOKEN;
   if(isForm){opt.body=body}else{opt.headers['Content-Type']='application/json';opt.body=JSON.stringify(body)}
   return fetch(url,opt).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
   .then(function(j){if(!j.success)throw new Error((j.error&&j.error.message)||'api error');return j.data});
@@ -1115,7 +1114,7 @@ function renderHome(){
 }
 
 /* ================= 地图 ================= */
-var SITE_LL={gaoqiao:[109.75,21.58],texing:[110.40,21.15],jinniu:[110.05,20.95]};
+var SITE_LL={gaoqiao:[109.759370,21.561075],texing:[110.428452,21.159749],jinniu:[110.256817,21.081841]};
 var CAT_NAME={plant:'植物',bird:'鸟类',benthic:'底栖'};
 function renderMap(){
   $('#siteList').innerHTML=SITES.map(function(s){
@@ -1127,16 +1126,15 @@ function renderMap(){
 }
 function showSite(id){
   var s=SITES.filter(function(x){return x.id===id})[0];if(!s)return;
-  var ll=SITE_LL[id]||[0,0];
   $('#siteDetail').innerHTML=
     '<h4 style="font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:'+s.color+'"></span>'+esc(s.name)+'</h4>'+
     '<p style="font-size:13px;color:var(--ink-2);margin:8px 0;line-height:1.8">'+esc(s.desc)+'</p>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+s.points.map(function(p){return '<span class="chip chip-sea">'+esc(p)+'</span>'}).join('')+'</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+(s.points.length?s.points.map(function(p){return '<span class="chip chip-sea">'+esc(p)+'</span>'}).join(''):'<span class="chip chip-accent">路线与观鸟屋待现场 GPS 校准</span>')+'</div>'+
     '<div class="info-row"><b>坐标</b><span>'+esc(s.coords)+'</span></div>'+
     '<div class="info-row"><b>GPS 触发</b><span>到点自动弹讲解卡片</span></div>'+
     '<div style="display:flex;gap:8px;margin-top:12px">'+
-      '<button class="btn btn-pine btn-sm" style="flex:1" data-nav="'+ll[0]+','+ll[1]+'">导航前往</button>'+
-      '<button class="btn btn-ghost btn-sm" data-arrive="'+s.id+'">模拟到点</button>'+
+      '<button class="btn btn-ghost btn-sm" style="flex:1" disabled>路线待采集</button>'+
+      '<button class="btn btn-ghost-pine btn-sm" data-arrive="'+s.id+'">模拟到点</button>'+
     '</div>';
   $('#siteDetail').style.display='block';
   $('#siteDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -1150,7 +1148,7 @@ function arriveDemo(id){
   $('.modal-title').textContent='GPS 到点触发 · '+s.name;
   $('.modal-body').innerHTML=
     '<div class="card" style="margin-bottom:12px"><b style="font-size:15px">'+esc(s.name)+'</b><p style="font-size:13px;color:var(--ink-2);margin-top:6px">'+esc(s.desc)+'</p>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+s.points.map(function(p){return '<span class="chip chip-sea">'+esc(p)+'</span>'}).join('')+'</div></div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+(s.points.length?s.points.map(function(p){return '<span class="chip chip-sea">'+esc(p)+'</span>'}).join(''):'<span class="chip chip-accent">路线与观鸟屋待现场 GPS 校准</span>')+'</div></div>'+
     '<div style="font-size:13px;font-weight:700;margin:4px 0 8px">这里推荐观察：</div>'+
     '<div class="spec-grid" style="grid-template-columns:repeat(3,1fr)">'+hot.map(function(sp){
       return '<button class="manual-item" data-sp="'+sp.id+'" style="border-color:var(--line)"><span class="ico">'+sp.art+'</span>'+esc(sp.name)+'</button>';
@@ -1548,6 +1546,7 @@ function bindEvents(){
       $('#spIntro').textContent=d.script;
       toast('AI 讲解稿已生成（约 '+d.durationSeconds+'s），正在播报…');
       apiTts(d.script,lc).then(function(t){
+        if(!t.audioUrl)throw new Error('TTS audio unavailable');
         var a=new Audio(t.audioUrl);
         a.play().catch(function(){speakText(d.script,STATE.lang||'zh')});
       }).catch(function(){speakText(d.script,STATE.lang||'zh')});

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from classifier import CentroidClassifier, FEATURE_SIZE, Image, image_feature
+from classifier import CentroidClassifier, FEATURE_SIZE, Image, file_sha256, image_feature
 from dataset import load_catalog, validate_dataset
 from api import model_is_ready, recognize
 from train import split_by_group, train
@@ -76,7 +76,7 @@ class DatasetTest(unittest.TestCase):
             features = np.zeros((4, FEATURE_SIZE), dtype=np.float32)
             CentroidClassifier.fit(features, labels, labels).save(output)
             (output.with_name("metrics.json")).write_text(
-                json.dumps({"validationAccuracy": 0.42, "readyForDemo": False}),
+                json.dumps({"validationAccuracy": 0.42, "readyForDemo": False, "modelSha256": file_sha256(output)}),
                 encoding="utf-8",
             )
             self.assertFalse(model_is_ready(output))
@@ -84,6 +84,44 @@ class DatasetTest(unittest.TestCase):
             status, result = recognize(fields, output)
             self.assertEqual(status, 200)
             self.assertTrue(result["data"]["fallbackRequired"])
+
+    def test_health_check_rejects_metrics_for_a_different_model(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+            output = Path(temporary) / "model.npz"
+            labels = [
+                "mangrove-bruguiera-gymnorrhiza",
+                "mangrove-kandelia-obovata",
+                "mangrove-aegiceras-corniculatum",
+                "mangrove-avicennia-marina",
+            ]
+            features = np.zeros((4, FEATURE_SIZE), dtype=np.float32)
+            CentroidClassifier.fit(features, labels, labels).save(output)
+            (output.with_name("metrics.json")).write_text(
+                json.dumps({
+                    "validationAccuracy": 1.0,
+                    "readyForDemo": True,
+                    "modelSha256": "0" * 64,
+                }),
+                encoding="utf-8",
+            )
+            self.assertFalse(model_is_ready(output))
+
+    def test_health_check_accepts_matching_ready_metrics(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+            output = Path(temporary) / "model.npz"
+            labels = [
+                "mangrove-bruguiera-gymnorrhiza",
+                "mangrove-kandelia-obovata",
+                "mangrove-aegiceras-corniculatum",
+                "mangrove-avicennia-marina",
+            ]
+            features = np.zeros((4, FEATURE_SIZE), dtype=np.float32)
+            CentroidClassifier.fit(features, labels, labels).save(output)
+            (output.with_name("metrics.json")).write_text(
+                json.dumps({"validationAccuracy": 1.0, "readyForDemo": True, "modelSha256": file_sha256(output)}),
+                encoding="utf-8",
+            )
+            self.assertTrue(model_is_ready(output))
 
     def test_classifier_predicts_nearest_class(self):
         features = np.vstack([np.zeros(FEATURE_SIZE), np.ones(FEATURE_SIZE)]).astype(np.float32)

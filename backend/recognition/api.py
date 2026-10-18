@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from backend.mock.server import MockHandler, error, has_valid_image, response, validate_bind_security  # noqa: E402
-from backend.recognition.classifier import CentroidClassifier, image_feature  # noqa: E402
+from backend.recognition.classifier import CentroidClassifier, file_sha256, image_feature  # noqa: E402
 
 
 MODEL_PATH = ROOT / "backend/recognition/artifacts/model.npz"
@@ -46,6 +46,15 @@ def load_ready_model(model_path: Path = MODEL_PATH, metrics_path: Path | None = 
         raise ValueError(f"评估指标文件无效：{exc}") from exc
     if not isinstance(metrics, dict) or metrics.get("readyForDemo") is not True:
         raise ValueError("模型评估未达到演示就绪条件")
+    expected_sha256 = metrics.get("modelSha256")
+    if not isinstance(expected_sha256, str) or len(expected_sha256) != 64:
+        raise ValueError("评估指标缺少有效的 modelSha256")
+    try:
+        actual_sha256 = file_sha256(model_path)
+    except OSError as exc:
+        raise ValueError(f"模型文件不可读：{exc}") from exc
+    if actual_sha256 != expected_sha256.lower():
+        raise ValueError("模型文件与评估指标不匹配")
     model = CentroidClassifier.load(model_path)
     catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
     if not isinstance(catalog, list) or any(not isinstance(item, dict) for item in catalog):
