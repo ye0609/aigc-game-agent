@@ -18,5 +18,15 @@
     "speciesId": "mangrove-avicennia-marina",
     "name": "白骨壤",
     "category": "mangrove"
+  },
+  {
+    "speciesId": "bird-egretta-garzetta",
+    "name": "白鹭",
+    "category": "bird"
+  },
+  {
+    "speciesId": "bird-black-faced-spoonbill",
+    "name": "黑脸琵鹭",
+    "category": "bird"
   }
 ]

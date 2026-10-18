@@ -6,8 +6,9 @@
 
 - Base URL：由部署环境提供，例如 `http://localhost:8000/api`
 - 请求和返回均使用 `application/json`，图片上传接口使用 `multipart/form-data`
-- 成功返回 HTTP 200；参数错误返回 400；未登录或无权限返回 401/403；服务异常返回 500
+- 成功返回 HTTP 200；参数错误返回 400；未登录或无权限返回 401/403；请求体超过 15 MiB 返回 413；服务异常返回 500
 - 每个响应包含 `requestId`，便于联调排查
+- 本机默认服务地址只监听 `127.0.0.1`。如需手机局域网联调，后端设置 `HOST=0.0.0.0` 和 `API_TOKEN`，A 的请求需带 `Authorization: Bearer <API_TOKEN>`；不要把服务或 token 用于公网部署
 
 ## 1. 物种识别
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import io
 import json
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -75,8 +76,28 @@ class CentroidClassifier:
 
     @classmethod
     def load(cls, path: Path):
-        with np.load(path, allow_pickle=False) as data:
-            return cls(data["labels"].tolist(), data["centroids"], data["counts"])
+        try:
+            with np.load(path, allow_pickle=False) as data:
+                labels = data["labels"].tolist()
+                centroids = data["centroids"]
+                counts = data["counts"]
+        except (OSError, ValueError, KeyError, IndexError, EOFError, zipfile.BadZipFile) as exc:
+            raise ValueError(f"模型文件无效：{exc}") from exc
+        if not isinstance(labels, list) or not labels or not all(isinstance(label, str) and label for label in labels):
+            raise ValueError("模型文件中的类别列表无效")
+        if (
+            len(labels) != len(set(labels))
+            or centroids.ndim != 2
+            or centroids.shape != (len(labels), FEATURE_SIZE)
+            or not np.issubdtype(centroids.dtype, np.floating)
+            or not np.isfinite(centroids).all()
+            or counts.ndim != 1
+            or len(counts) != len(labels)
+            or not np.issubdtype(counts.dtype, np.integer)
+            or np.any(counts <= 0)
+        ):
+            raise ValueError("模型文件中的类别、特征或样本数不匹配")
+        return cls(labels, centroids, counts)
 
 
 def write_metrics(path: Path, metrics: dict):

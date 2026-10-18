@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from backend.mock.server import MockHandler, error, response  # noqa: E402
+from backend.mock.server import MockHandler, error, has_valid_image, response, validate_bind_security  # noqa: E402
 from backend.recognition.classifier import CentroidClassifier, image_feature  # noqa: E402
 
 
@@ -37,26 +37,51 @@ def fallback_result(mode: str) -> dict:
     }
 
 
+def load_ready_model(model_path: Path = MODEL_PATH):
+    model = CentroidClassifier.load(model_path)
+    catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+    if not isinstance(catalog, list) or any(not isinstance(item, dict) for item in catalog):
+        raise ValueError("物种目录格式无效")
+    mangroves = [item for item in catalog if item.get("category") == "mangrove"]
+    if any(not isinstance(item.get("speciesId"), str) or not item["speciesId"] for item in mangroves):
+        raise ValueError("红树物种目录缺少有效 speciesId")
+    expected_labels = {item["speciesId"] for item in mangroves}
+    if not expected_labels or set(model.labels) != expected_labels:
+        raise ValueError("模型类别与当前红树物种目录不匹配")
+    return model, catalog
+
+
+def model_is_ready(model_path: Path = MODEL_PATH) -> bool:
+    try:
+        load_ready_model(model_path)
+    except (OSError, ValueError):
+        return False
+    return True
+
+
 def recognize(fields: dict, model_path: Path = MODEL_PATH) -> tuple[int, dict]:
     mode = fields.get("mode")
     if mode not in ("mangrove", "bird"):
         return error("mode 必须是 mangrove 或 bird")
-    image = fields.get("_files", {}).get("image")
-    if not image or not image.get("content"):
-        return error("image 为必填项")
+    if not has_valid_image(fields):
+        return error("image 为必填项且文件内容不能为空")
+    image = fields["_files"]["image"]
 
     # 鸟类模型尚未开发，绝不冒充为真实识别结果。
-    if mode == "bird" or not model_path.exists():
+    if mode == "bird":
+        return response(fallback_result(mode))
+
+    try:
+        model, catalog = load_ready_model(model_path)
+    except (OSError, ValueError):
         return response(fallback_result(mode))
 
     try:
         feature = image_feature(image["content"])
-        model = CentroidClassifier.load(model_path)
         prediction = model.predict(feature)
-    except (OSError, ValueError, RuntimeError) as exc:
+    except (ValueError, RuntimeError) as exc:
         return error(f"识别失败：{exc}", 400)
 
-    catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
     species = next((item for item in catalog if item["speciesId"] == prediction["label"]), None)
     if not species:
         return error("模型标签不在物种目录中", 500)
@@ -75,11 +100,14 @@ class RecognitionHandler(MockHandler):
     server_version = "MangroveRecognition/1.0"
 
     def do_GET(self):
+        if not self.authorized():
+            self.reject_unauthorized()
+            return
         if urlparse(self.path).path == "/api/health":
             status, payload = response({
                 "service": "hybrid",
                 "status": "ok",
-                "mangroveModelReady": MODEL_PATH.exists(),
+                "mangroveModelReady": model_is_ready(),
                 "birdModelReady": False,
                 "otherEndpoints": "mock",
             })
@@ -96,9 +124,12 @@ class RecognitionHandler(MockHandler):
 def main():
     host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8000"))
+    token = os.environ.get("API_TOKEN", "")
+    validate_bind_security(host, token)
     server = ThreadingHTTPServer((host, port), RecognitionHandler)
+    server.api_token = token
     print(f"识别联调服务已启动：http://{host}:{port}")
-    print(f"红树模型状态：{'已就绪' if MODEL_PATH.exists() else '未就绪，使用手动选择兜底'}")
+    print(f"红树模型状态：{'已就绪' if model_is_ready() else '未就绪，使用手动选择兜底'}")
     print("其他接口仍使用 mock 响应；按 Ctrl+C 停止")
     try:
         server.serve_forever()

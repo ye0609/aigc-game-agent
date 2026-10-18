@@ -13,6 +13,8 @@ python server.py
 
 启动后访问 `http://127.0.0.1:8000/api/health` 检查服务状态。
 
+请求体上限为 15 MiB。默认只监听本机；如需局域网联调，设置 `HOST=0.0.0.0` 和 `API_TOKEN` 后启动，所有 GET/POST 请求需携带 `Authorization: Bearer <API_TOKEN>`。未设置 token 时绑定非本机地址会失败。此 token 仅用于开发联调，不应用于公网部署。
+
 ## 联调示例
 
 健康检查：
@@ -41,6 +43,7 @@ curl.exe -X POST http://127.0.0.1:8000/api/recognition/species `
 ## 自检
 
 ```bash
+python -m pip install -r requirements-test.txt
 python -m unittest test_server.py -v
 ```
 
