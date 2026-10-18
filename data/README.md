@@ -4,6 +4,7 @@
 
 - `species.schema.json`：物种数据字段约束
 - `species.example.json`：一条完整物种记录示例
+- `sites.schema.json`：地点、步道和观鸟屋字段约束
 - `sites.example.json`：地点、步道和观鸟屋记录示例
 
 图片、音频使用相对路径或最终对象存储 URL；不要把密钥放在 JSON 中。

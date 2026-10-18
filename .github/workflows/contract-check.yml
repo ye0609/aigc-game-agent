@@ -1,0 +1,18 @@
+name: Contract checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  mock-and-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run mock contract tests
+        working-directory: backend/mock
+        run: python -m unittest test_server.py -v
