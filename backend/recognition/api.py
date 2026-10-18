@@ -22,6 +22,7 @@ from backend.recognition.classifier import CentroidClassifier, image_feature  # 
 
 
 MODEL_PATH = ROOT / "backend/recognition/artifacts/model.npz"
+METRICS_PATH = ROOT / "backend/recognition/artifacts/metrics.json"
 CATALOG_PATH = ROOT / "data/species.catalog.json"
 CONFIDENCE_THRESHOLD = 0.65
 
@@ -37,7 +38,14 @@ def fallback_result(mode: str) -> dict:
     }
 
 
-def load_ready_model(model_path: Path = MODEL_PATH):
+def load_ready_model(model_path: Path = MODEL_PATH, metrics_path: Path | None = None):
+    metrics_path = metrics_path or (METRICS_PATH if model_path == MODEL_PATH else model_path.with_name("metrics.json"))
+    try:
+        metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"评估指标文件无效：{exc}") from exc
+    if not isinstance(metrics, dict) or metrics.get("readyForDemo") is not True:
+        raise ValueError("模型评估未达到演示就绪条件")
     model = CentroidClassifier.load(model_path)
     catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
     if not isinstance(catalog, list) or any(not isinstance(item, dict) for item in catalog):

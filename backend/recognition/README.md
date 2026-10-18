@@ -27,7 +27,7 @@ python backend/recognition/train.py --root data/recognition --min-per-class 30
 - `backend/recognition/artifacts/model.npz`：模型参数（本地生成，不提交）
 - `backend/recognition/artifacts/metrics.json`：验证集样本数和准确率
 
-`validationSplit` 应显示为 `grouped-by-group_id`。只有 `validationAccuracy >= 0.75` 才把 `readyForDemo` 视为 true；该基线和小样本评估不能代表现场准确率，仍需用独立地点和现场手机照片复测。
+`validationSplit` 应显示为 `grouped-by-group_id`。只有 `validationAccuracy >= 0.75` 才把 `readyForDemo` 写为 true；服务加载模型前还会读取同目录的 `metrics.json`，只有 `readyForDemo: true` 才会在 health 中报告模型就绪并执行识别。该基线和小样本评估不能代表现场准确率，仍需用独立地点和现场手机照片复测。
 
 ## 单张推理
 

@@ -64,6 +64,27 @@ class DatasetTest(unittest.TestCase):
             self.assertEqual(status, 200)
             self.assertTrue(result["data"]["fallbackRequired"])
 
+    def test_health_check_requires_ready_for_demo_metrics(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+            output = Path(temporary) / "model.npz"
+            labels = [
+                "mangrove-bruguiera-gymnorrhiza",
+                "mangrove-kandelia-obovata",
+                "mangrove-aegiceras-corniculatum",
+                "mangrove-avicennia-marina",
+            ]
+            features = np.zeros((4, FEATURE_SIZE), dtype=np.float32)
+            CentroidClassifier.fit(features, labels, labels).save(output)
+            (output.with_name("metrics.json")).write_text(
+                json.dumps({"validationAccuracy": 0.42, "readyForDemo": False}),
+                encoding="utf-8",
+            )
+            self.assertFalse(model_is_ready(output))
+            fields = {"mode": "mangrove", "_files": {"image": {"filename": "photo.jpg", "content": b"image"}}}
+            status, result = recognize(fields, output)
+            self.assertEqual(status, 200)
+            self.assertTrue(result["data"]["fallbackRequired"])
+
     def test_classifier_predicts_nearest_class(self):
         features = np.vstack([np.zeros(FEATURE_SIZE), np.ones(FEATURE_SIZE)]).astype(np.float32)
         model = CentroidClassifier.fit(features, ["a", "b"], ["a", "b"])
