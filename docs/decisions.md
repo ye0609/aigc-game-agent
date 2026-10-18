@@ -13,7 +13,7 @@
 ## 待确认
 
 - 三个地点的最终名称、坐标和路线数据
-- 4 种红树的最终 `speciesId` 与保护等级
+- 4 种红树的最终 `speciesId` 与保护等级（已按 D-003 和 `data/species/` 落库，待 A/B 复核）
 - 真实识别服务和 TTS 服务的部署地址
 
 ## D-002：先保留可替换识别基线
@@ -32,3 +32,12 @@
 - 原因：原 ID 对应的拉丁名并非木榄；字段还处于草案期，必须在 A/C 开始批量录入前更正。
 - 影响：`docs/api.md`、mock、目录样例和图文样例同步修改；A/C 若已保存旧 ID，请替换。
 - 参考：https://xbna.pku.edu.cn/fileup/0479-8023/HTML/2022-4-687.html
+
+## D-004：物种内容按 `speciesId` 分文件（待确认）
+
+- 日期：2026-10-18
+- 状态：待 A/B 确认
+- 提案：4 种红树的完整内容放在 `data/species/<speciesId>.json`，文件名与 `speciesId` 一致；`data/species.catalog.json` 继续作为稳定 ID 清单。
+- 原因：每条记录可以直接用 `species.schema.json` 校验，和 `data/recognition/<speciesId>/` 的训练目录同构；不额外引入数组级 schema。
+- 影响：A 按 catalog 加载 4 个文件；新增或改名字时先改 catalog，再改内容文件。
+- 备选：如果 A 更希望单个 `data/species.json` 数组，需要在合并前改，并补数组级校验。

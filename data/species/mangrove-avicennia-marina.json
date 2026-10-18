@@ -1,0 +1,22 @@
+{
+  "speciesId": "mangrove-avicennia-marina",
+  "name": "白骨壤",
+  "aliases": ["海榄雌", "咸水矮让木"],
+  "category": "mangrove",
+  "protectionLevel": "未列入《国家重点保护野生植物名录》（2021）；IUCN 红色名录：无危（LC）",
+  "images": ["assets/species/mangrove-avicennia-marina/main.jpg"],
+  "description": {
+    "habitat": "生长在潮间带外缘的泥滩或沙泥滩，是红树林向海推进的先锋种，耐盐、耐淹，能适应较宽的潮位和盐度范围。",
+    "behavior": "爵床科（曾归马鞭草科）海榄雌属灌木或小乔木，高可达 10 米；具指状呼吸根，从泥面竖起。叶背银白色，具盐腺，可排出多余盐分。花小，白色至金黄色；种子在母树上萌发，属隐胎生。",
+    "conservation": "全球种群稳定，IUCN 列为无危；红树林湿地受《中华人民共和国湿地保护法》保护，主要威胁是围垦、污染和海岸工程。白骨壤是极端耐盐的先锋种，常用于前缘造林，但应避免破坏自然滩涂水文。"
+  },
+  "audio": {
+    "birdCall": null,
+    "explanation": "assets/audio/mangrove-avicennia-marina/zh-CN.mp3"
+  },
+  "languages": {
+    "zh-CN": "白骨壤的叶子背面是银白色的，泥滩上还会竖起一根根指状的呼吸根，帮它在缺氧的淤泥里呼吸。它是最耐盐的红树先锋之一。",
+    "zh-HK": "白骨壤嘅葉底係銀白色，泥灘仲會豎起一根根指狀嘅呼吸根，幫佢喺缺氧嘅淤泥入面呼吸。佢係最耐鹽嘅紅樹先鋒之一。",
+    "en-US": "Grey mangrove (Avicennia marina) has silvery-white leaf undersides and finger-like pneumatophores that stand up from the mud to help it breathe. It is one of the most salt-tolerant mangrove pioneers."
+  }
+}

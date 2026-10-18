@@ -1,0 +1,22 @@
+{
+  "speciesId": "mangrove-kandelia-obovata",
+  "name": "秋茄",
+  "aliases": ["秋茄树", "水笔仔"],
+  "category": "mangrove",
+  "protectionLevel": "未列入《国家重点保护野生植物名录》（2021）；IUCN 红色名录：无危（LC）",
+  "images": ["assets/species/mangrove-kandelia-obovata/main.jpg"],
+  "description": {
+    "habitat": "生长在潮间带中低潮位的泥滩，常构成红树林外缘或单优势种群落，耐淹、耐盐，也出现在河口咸淡水交汇处。",
+    "behavior": "红树科秋茄属灌木或小乔木，高 2–3 米；具支柱根。花白色，花期 5–7 月。胚轴在果实未离母树时萌发，长 12–20 厘米，脱落后可随潮水漂流，找到合适泥滩再扎根。",
+    "conservation": "全球种群稳定，IUCN 列为无危；红树林湿地受《中华人民共和国湿地保护法》保护，主要威胁是围垦、污染和海岸工程。秋茄是华南红树林造林和修复常用本地种，修复时应保留自然潮汐水文。"
+  },
+  "audio": {
+    "birdCall": null,
+    "explanation": "assets/audio/mangrove-kandelia-obovata/zh-CN.mp3"
+  },
+  "languages": {
+    "zh-CN": "秋茄是华南沿海常见的红树，它的种子在果实还挂在树上时就开始发芽，长成笔状的胚轴，掉落后随潮水漂流，遇到泥滩就扎根。",
+    "zh-HK": "秋茄係華南沿海常見嘅紅樹，佢嘅種子喺果實仲掛喺樹上時就開始發芽，長成筆狀嘅胚軸，跌落之後跟住潮水漂流，遇到泥灘就扎根。",
+    "en-US": "Kandelia obovata, known in Chinese as qiujia, is a common mangrove along the coast of southern China. Its seed germinates while the fruit is still on the tree, forming a pencil-shaped propagule that drifts with the tide and roots when it reaches a mudflat."
+  }
+}

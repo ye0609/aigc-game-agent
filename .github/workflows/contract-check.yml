@@ -20,6 +20,8 @@ jobs:
       - name: Run mock contract tests
         working-directory: backend/mock
         run: python -m unittest test_server.py -v
+      - name: Run species data tests
+        run: python data/test_species_data.py -v
       - name: Run recognition baseline tests
         working-directory: backend/recognition
         run: python -m unittest test_recognition.py -v
