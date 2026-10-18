@@ -6,8 +6,11 @@
 
 from __future__ import annotations
 
+import hmac
+import ipaddress
 import json
-import re
+import math
+import os
 import uuid
 from email.parser import BytesParser
 from email.policy import default
@@ -17,10 +20,15 @@ from urllib.parse import urlparse
 
 HOST = "127.0.0.1"
 PORT = 8000
+MAX_REQUEST_BYTES = 15 * 1024 * 1024
+
+
+class RequestTooLargeError(Exception):
+    pass
 
 MANGROVES = {
     "木榄": {
-        "speciesId": "mangrove-rhizophora-apiculata",
+        "speciesId": "mangrove-bruguiera-gymnorrhiza",
         "name": "木榄",
         "confidence": 0.92,
     },
@@ -85,7 +93,7 @@ def parse_multipart(raw: bytes, content_type: str):
         filename = part.get_filename()
         payload = part.get_payload(decode=True) or b""
         if filename:
-            files[name] = {"filename": filename, "size": len(payload)}
+            files[name] = {"filename": filename, "size": len(payload), "content": payload}
         else:
             fields[name] = payload.decode(part.get_content_charset() or "utf-8", errors="replace")
     fields["_files"] = files
@@ -93,17 +101,67 @@ def parse_multipart(raw: bytes, content_type: str):
 
 
 def parse_body(handler: BaseHTTPRequestHandler):
-    length = int(handler.headers.get("Content-Length", "0"))
+    if handler.headers.get("Transfer-Encoding"):
+        raise ValueError("不支持 Transfer-Encoding")
+    try:
+        length = int(handler.headers.get("Content-Length", "0"))
+    except ValueError as exc:
+        raise ValueError("Content-Length 无效") from exc
+    if length < 0:
+        raise ValueError("Content-Length 无效")
+    if length > MAX_REQUEST_BYTES:
+        raise RequestTooLargeError(f"请求体不能超过 {MAX_REQUEST_BYTES // (1024 * 1024)} MB")
     raw = handler.rfile.read(length)
+    if len(raw) != length:
+        raise ValueError("请求体不完整")
     content_type = handler.headers.get("Content-Type", "")
     if content_type.startswith("multipart/form-data"):
         return parse_multipart(raw, content_type)
     return parse_json(raw)
 
 
+def has_valid_image(fields: dict) -> bool:
+    image = fields.get("_files", {}).get("image")
+    content = image.get("content") if isinstance(image, dict) else None
+    return isinstance(content, (bytes, bytearray)) and len(content) > 0
+
+
+def validate_bind_security(host: str, token: str):
+    if host.lower() == "localhost":
+        return
+    try:
+        is_loopback = ipaddress.ip_address(host.strip("[]")).is_loopback
+    except ValueError:
+        is_loopback = False
+    if not is_loopback and not token:
+        raise ValueError("服务绑定到非本机地址时必须设置 API_TOKEN")
+
+
+def has_valid_bearer_token(authorization: str, token: str) -> bool:
+    if not token:
+        return True
+    scheme, separator, candidate = authorization.partition(" ")
+    return (
+        separator == " "
+        and scheme.lower() == "bearer"
+        and hmac.compare_digest(candidate.encode("utf-8"), token.encode("utf-8"))
+    )
+
+
+def valid_coordinate(value, minimum: float, maximum: float) -> bool:
+    if isinstance(value, bool):
+        return False
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(number) and minimum <= number <= maximum
+
+
 def choose_species(mode: str, fields: dict):
     groups = MANGROVES if mode == "mangrove" else BIRDS
-    filename = next(iter(fields.get("_files", {})), "")
+    image = fields.get("_files", {}).get("image", {})
+    filename = image.get("filename", "")
     for keyword, species in groups.items():
         if keyword in filename:
             return species
@@ -128,10 +186,26 @@ class MockHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def authorized(self):
+        token = getattr(self.server, "api_token", os.environ.get("API_TOKEN", ""))
+        return has_valid_bearer_token(self.headers.get("Authorization", ""), token)
+
+    def reject_unauthorized(self):
+        self.close_connection = True
+        status, payload = error("需要有效的 Bearer API_TOKEN", 401)
+        self.send_json(status, payload)
+
     def do_OPTIONS(self):
-        self.send_json(204, {})
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.end_headers()
 
     def do_GET(self):
+        if not self.authorized():
+            self.reject_unauthorized()
+            return
         path = urlparse(self.path).path
         if path == "/api/health":
             status, payload = response({"service": "mock", "status": "ok"})
@@ -140,10 +214,16 @@ class MockHandler(BaseHTTPRequestHandler):
         self.send_json(404, error("接口不存在", 404)[1])
 
     def do_POST(self):
+        if not self.authorized():
+            self.reject_unauthorized()
+            return
         path = urlparse(self.path).path
         try:
             fields = parse_body(self)
             status, payload = self.route(path, fields)
+        except RequestTooLargeError as exc:
+            self.close_connection = True
+            status, payload = error(str(exc), 413)
         except ValueError as exc:
             status, payload = error(str(exc))
         except Exception as exc:  # mock 服务要返回可读错误，便于前端联调
@@ -155,8 +235,8 @@ class MockHandler(BaseHTTPRequestHandler):
             mode = fields.get("mode")
             if mode not in ("mangrove", "bird"):
                 return error("mode 必须是 mangrove 或 bird")
-            if not fields.get("_files"):
-                return error("image 为必填项")
+            if not has_valid_image(fields):
+                return error("image 为必填项且文件内容不能为空")
             species = choose_species(mode, fields)
             return response({
                 **species,
@@ -201,8 +281,10 @@ class MockHandler(BaseHTTPRequestHandler):
             report_type = fields.get("type")
             if report_type not in ("observation", "litter"):
                 return error("type 必须是 observation 或 litter")
-            if not fields.get("latitude") or not fields.get("longitude"):
-                return error("latitude 和 longitude 为必填项")
+            if not valid_coordinate(fields.get("latitude"), -90, 90):
+                return error("latitude 必须是 -90 到 90 之间的有限数字")
+            if not valid_coordinate(fields.get("longitude"), -180, 180):
+                return error("longitude 必须是 -180 到 180 之间的有限数字")
             if report_type == "observation" and not fields.get("speciesId"):
                 return error("observation 必须提供 speciesId")
             return response({"reportId": f"report_{uuid.uuid4().hex[:8]}", "status": "received"})
@@ -211,8 +293,13 @@ class MockHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    server = ThreadingHTTPServer((HOST, PORT), MockHandler)
-    print(f"Mock 服务已启动：http://{HOST}:{PORT}")
+    host = os.environ.get("HOST", HOST)
+    port = int(os.environ.get("PORT", str(PORT)))
+    token = os.environ.get("API_TOKEN", "")
+    validate_bind_security(host, token)
+    server = ThreadingHTTPServer((host, port), MockHandler)
+    server.api_token = token
+    print(f"Mock 服务已启动：http://{host}:{port}")
     print("按 Ctrl+C 停止")
     try:
         server.serve_forever()

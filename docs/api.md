@@ -6,8 +6,9 @@
 
 - Base URL：由部署环境提供，例如 `http://localhost:8000/api`
 - 请求和返回均使用 `application/json`，图片上传接口使用 `multipart/form-data`
-- 成功返回 HTTP 200；参数错误返回 400；未登录或无权限返回 401/403；服务异常返回 500
+- 成功返回 HTTP 200；参数错误返回 400；未登录或无权限返回 401/403；请求体超过 15 MiB 返回 413；服务异常返回 500
 - 每个响应包含 `requestId`，便于联调排查
+- 本机默认服务地址只监听 `127.0.0.1`。手机联调与二维码演示使用同域 HTTPS 反向代理：代理从环境变量读取 `API_TOKEN` 并添加 `Authorization: Bearer <API_TOKEN>`，后端仍监听本机，浏览器只请求 `/api`，不得在 `index.html` 中放 token。局域网直接调用后端时也可设置 `HOST=0.0.0.0` 和 `API_TOKEN`，但不得用于公开部署；具体配置见 `docs/deployment.md`
 
 ## 1. 物种识别
 
@@ -29,7 +30,7 @@ mode: "mangrove" | "bird"（必填）
   "requestId": "req_demo_001",
   "success": true,
   "data": {
-    "speciesId": "mangrove-rhizophora-apiculata",
+    "speciesId": "mangrove-bruguiera-gymnorrhiza",
     "name": "木榄",
     "category": "mangrove",
     "confidence": 0.92,
@@ -42,6 +43,8 @@ mode: "mangrove" | "bird"（必填）
 
 识别不确定时返回 `success: true`、`fallbackRequired: true`，前端展示手动选物种和 GPS 点位卡片。
 
+模型未就绪时返回同一结构，但 `speciesId`、`name` 为 `null`，`confidence` 为 `0.0`；此时前端必须使用手动选择，不得把返回结果当成真实识别。
+
 ## 2. RAG 问答
 
 `POST /knowledge/ask`
@@ -52,7 +55,7 @@ mode: "mangrove" | "bird"（必填）
 {
   "question": "为什么红树林能防风浪？",
   "language": "zh-CN",
-  "contextSpeciesId": "mangrove-rhizophora-apiculata"
+  "contextSpeciesId": "mangrove-bruguiera-gymnorrhiza"
 }
 ```
 
@@ -78,7 +81,7 @@ mode: "mangrove" | "bird"（必填）
 
 ```json
 {
-  "speciesId": "mangrove-rhizophora-apiculata",
+  "speciesId": "mangrove-bruguiera-gymnorrhiza",
   "language": "zh-CN",
   "audience": "student"
 }

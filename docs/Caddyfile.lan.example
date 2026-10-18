@@ -1,0 +1,15 @@
+# 从仓库根目录运行；DEMO_HOST 为电脑的局域网 IP。
+https://{$DEMO_HOST} {
+    tls internal
+    root * ./frontend
+
+    handle /api/* {
+        reverse_proxy 127.0.0.1:8000 {
+            header_up Authorization "Bearer {$API_TOKEN}"
+        }
+    }
+
+    handle {
+        file_server
+    }
+}
