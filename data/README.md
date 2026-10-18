@@ -6,6 +6,7 @@
 - `species.example.json`：一条完整物种记录示例
 - `sites.schema.json`：地点、步道和观鸟屋字段约束
 - `sites.example.json`：地点、步道和观鸟屋记录示例
+- `sites.json`：三个研学地点的站点数据（WGS-84）
 - `species.catalog.json`：识别、前端和内容共用的稳定物种 ID 清单
 - `species/`：4 种红树的完整内容，一条记录一个文件，文件名即 `speciesId`
 - `recognition/`：按 `speciesId` 分目录的训练图片，见其中的 README
@@ -29,4 +30,20 @@
 
 ```bash
 python data/test_species_data.py -v
+```
+
+## 地点数据
+
+`data/sites.json` 是三个研学地点的数组，字段必须符合 `sites.schema.json`：
+
+- `gaoqiao-mangrove`：高桥红树林
+- `texing-island`：特呈岛红树林
+- `jinniu-island`：金牛岛红树林
+
+坐标统一使用 **WGS-84**；高德/腾讯地图接入前由 A 转成 GCJ-02。站点中心已按公开地图核实，`route` 和 `birdWatchingShelters` 目前为空，因为公开资料没有栈道拐点和观鸟屋的精确坐标；现场 GPS 采集后填入，并删除 `description` 里的“待现场 GPS 校准”。来源和采集清单见 `docs/sites.sources.md`。
+
+改地点数据后运行：
+
+```bash
+python data/test_sites_data.py -v
 ```
