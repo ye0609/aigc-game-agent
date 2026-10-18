@@ -513,7 +513,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
   <section class="view" id="view-map">
     <div class="page-head">
       <button class="back-btn" data-back="home" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
-      <div><div class="page-title">地图导览</div><div class="page-sub">高桥 / 特呈岛 / 金牛岛 · 步道与观鸟屋导航</div></div>
+      <div><div class="page-title">地图导览</div><div class="page-sub" style="color:#B4553A">示意地图 · 非实地导航，等 C 提供真实坐标后接入高德 / 腾讯 SDK</div></div>
       <span class="chip chip-sea" style="margin-left:auto">离线可用</span>
     </div>
 
@@ -1480,7 +1480,7 @@ function bindEvents(){
   $('#resetTasksBtn').onclick=function(){if(confirm('确定重置全部研学任务？')){STATE.tasks={};saveState();renderStudy();toast('研学进度已重置')}};
   $('#genNoteBtn').onclick=genNote;
   $('#copyNoteBtn').onclick=function(){copyText($('#noteResult').textContent)};
-  $('#reportSpecies').innerHTML='<option value="">请选择物种</option>'+SPECIES.map(function(sp){return '<option value="'+sp.id+'">'+esc(sp.name)+'</option>'}).join('');
+  $('#reportSpecies').innerHTML='<option value="">请选择物种</option>'+SPECIES.filter(function(sp){return API_ID_MAP[sp.id]}).map(function(sp){return '<option value="'+sp.id+'">'+esc(sp.name)+'</option>'}).join('');
   $('#reportType').addEventListener('change',function(){
     var v=this.value;
     $('#reportSpeciesField').style.display=v==='observe'?'block':'none';
