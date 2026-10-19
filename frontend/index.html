@@ -517,7 +517,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
     </div>
 
     <div class="spec-grid" id="guideGrid"></div>
-    <div class="demo-note">物种实拍图与叫声由 C 交付后替换 assets/ 路径；当前为内联矢量占位。</div>
+    <div class="demo-note">四种红树已接入公开许可图片（来源见 assets/README.md，非湛江现场实拍）；其余物种仍使用矢量占位，鸟叫录音待补齐。</div>
   </section>
 
   <!-- ===== 视图：地图路线 ===== -->
@@ -784,8 +784,8 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
 /* ================================================================
    数据层（MOCK）
    约定：B/C 交付后按相同字段结构替换，页面渲染代码无需改动。
-   - SPECIES.art  ->  C 实拍图后改为 assets/species/<id>.jpg
-   - SPECIES.call ->  C 鸟叫音频后改为 assets/audio/<id>.mp3
+   - 红树图片由共享物种 JSON 的 images 字段加载，其余物种保留矢量占位
+   - SPECIES.call ->  后续鸟叫音频路径见 assets/audio/<id>.mp3
    ================================================================ */
 // 地图 SDK key 由部署层注入，不能写入静态页面或提交到仓库。
 var MAP_SDK_KEY = "";
