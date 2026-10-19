@@ -22,7 +22,8 @@ class DatasetTest(unittest.TestCase):
         self.assertTrue(all(item["category"] == "mangrove" for item in catalog))
 
     def test_empty_training_directory_is_reported_as_not_ready(self):
-        report = validate_dataset(ROOT / "data/recognition", ROOT / "data/species.catalog.json", min_per_class=30)
+        with tempfile.TemporaryDirectory() as directory:
+            report = validate_dataset(Path(directory), ROOT / "data/species.catalog.json", min_per_class=30)
         self.assertFalse(report["ready"])
         self.assertEqual(report["total"], 0)
         self.assertEqual(len(report["missing"]), 4)

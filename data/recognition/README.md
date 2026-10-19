@@ -27,6 +27,20 @@ mangrove-bruguiera-gymnorrhiza/IMG_0003.jpg,mangrove-bruguiera-tree-02
 
 当前 4 类是初版候选物种；C 需在录入和采图前确认项目现场确实展示这 4 类。若更换物种，先同步更新 `data/species.catalog.json`、`docs/api.md` 和 mock，再开始训练。
 
+## 当前公开许可数据集
+
+仓库中的 `sources.csv` 是由 `tools/collect_training_images.py` 生成的来源清单。当前 147 张图片来自 iNaturalist 的研究级观察，逐张照片的许可证为 `CC BY`、`CC0` 或 `CC BY-SA`，并记录了观察页、作者、许可证、观察 ID 和 SHA-256。`groups.csv` 使用 iNaturalist observation ID 作为采集组；同一次观察只取一张照片，避免连拍图片同时进入训练集和验证集。
+
+这批公开图片用于验证训练管线和接口，不等于湛江现场数据。运行基线训练后如果 `validationAccuracy` 低于 0.75，必须保留 `readyForDemo: false`，演示继续使用手动选物种 / GPS 点位兜底。后续加入湛江实拍时，应在 `sources.csv` 中记录来源，并把同一棵树或同一次采集的图片改成同一个真实 `group_id`；不能把不同来源的图片伪装成同一采集组。
+
+重新获取同样规则的数据：
+
+```bash
+python tools/collect_training_images.py
+```
+
+该脚本不会把图片提交到 GitHub（训练图片目录由 `.gitignore` 忽略），但 `groups.csv` 和 `sources.csv` 应随数据版本一起保存。
+
 训练前先运行：
 
 ```bash
