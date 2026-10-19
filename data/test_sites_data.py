@@ -84,6 +84,24 @@ class SiteDataTest(unittest.TestCase):
         for site in self.sites:
             self.assertIn(site["name"], text)
 
+    def test_coordinate_system_is_wgs84(self):
+        text = SOURCES_PATH.read_text(encoding="utf-8")
+        self.assertIn("WGS-84", text)
+        for site in self.sites:
+            with self.subTest(site=site["siteId"]):
+                self.assertIn("WGS-84", site["description"])
+
+    def test_routes_have_at_least_two_points(self):
+        for site in self.sites:
+            with self.subTest(site=site["siteId"]):
+                self.assertGreaterEqual(len(site["route"]), 2)
+
+    def test_reference_data_is_labeled(self):
+        for site in self.sites:
+            with self.subTest(site=site["siteId"]):
+                self.assertIn("参考坐标", site["description"])
+                self.assertIn("尚未现场实测", site["description"])
+
     def test_no_custom_fields(self):
         for site in self.sites:
             with self.subTest(site=site["siteId"]):
