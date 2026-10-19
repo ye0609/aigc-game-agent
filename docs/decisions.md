@@ -12,8 +12,7 @@
 
 ## 待确认
 
-- 三个地点的最终名称和站点中心坐标（已按公开地图核实；栈道拐点、观鸟屋待现场 GPS）
-- 4 种红树的最终 `speciesId` 与保护等级（已按 D-003 和 `data/species/` 落库，待 A/B 复核）
+- 三个地点的栈道拐点、观鸟屋和现场 GPS 轨迹
 - 真实识别服务和 TTS 服务的部署地址
 
 ## D-002：先保留可替换识别基线
@@ -33,19 +32,19 @@
 - 影响：`docs/api.md`、mock、目录样例和图文样例同步修改；A/C 若已保存旧 ID，请替换。
 - 参考：https://xbna.pku.edu.cn/fileup/0479-8023/HTML/2022-4-687.html
 
-## D-004：物种内容按 `speciesId` 分文件（待确认）
+## D-004：物种内容按 `speciesId` 分文件
 
 - 日期：2026-10-18
-- 状态：待 A/B 确认
+- 状态：已确认
 - 提案：4 种红树的完整内容放在 `data/species/<speciesId>.json`，文件名与 `speciesId` 一致；`data/species.catalog.json` 继续作为稳定 ID 清单。
 - 原因：每条记录可以直接用 `species.schema.json` 校验，和 `data/recognition/<speciesId>/` 的训练目录同构；不额外引入数组级 schema。
 - 影响：A 按 catalog 加载 4 个文件；新增或改名字时先改 catalog，再改内容文件。
 - 备选：如果 A 更希望单个 `data/species.json` 数组，需要在合并前改，并补数组级校验。
 
-## D-005：地点数据先交站点中心，路线/观鸟屋待现场采集（待确认）
+## D-005：地点数据先交站点中心，路线/观鸟屋待现场采集
 
 - 日期：2026-10-18
-- 状态：待 A/B 确认
+- 状态：已确认
 - 决定：`data/sites.json` 保存三个站点的 WGS-84 中心坐标；`route` 和 `birdWatchingShelters` 暂为空，等 C 现场 GPS 采集后填入。不用地图中心或卫星图猜点冒充路线/观鸟屋。
 - 原因：公开资料能确认栈道和观鸟设施存在，但没有逐点坐标；错误导航比空数据更危险。
 - 影响：A 先显示站点标记和“路线待采集”，不要用空路线做转弯导航；填点后运行 `python data/test_sites_data.py -v`。

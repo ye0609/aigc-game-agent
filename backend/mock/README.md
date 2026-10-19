@@ -15,6 +15,8 @@ python server.py
 
 请求体上限为 15 MiB。默认只监听本机；如需局域网联调，设置 `HOST=0.0.0.0` 和 `API_TOKEN` 后启动，所有 GET/POST 请求需携带 `Authorization: Bearer <API_TOKEN>`。未设置 token 时绑定非本机地址会失败。此 token 仅用于开发联调，不应用于公网部署。
 
+跨域开发默认只允许 `file://` 的 `Origin: null`。如果前端通过局域网开发服务器访问接口，额外设置 `CORS_ORIGIN`，可用逗号分隔多个完整来源，例如 `http://192.168.1.23:5500`；不要使用 `*`。
+
 ## 联调示例
 
 健康检查：

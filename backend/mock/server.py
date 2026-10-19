@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 HOST = "127.0.0.1"
 PORT = 8000
 MAX_REQUEST_BYTES = 15 * 1024 * 1024
+MAX_TTS_TEXT_LENGTH = 2000
 
 
 class RequestTooLargeError(Exception):
@@ -149,6 +150,18 @@ def has_valid_bearer_token(authorization: str, token: str) -> bool:
     )
 
 
+def allowed_cors_origin(origin: str, configured: str) -> str | None:
+    """Return the exact allowed origin; never reflect arbitrary origins."""
+    if not origin:
+        return None
+    allowed = {item.strip() for item in configured.split(",") if item.strip()}
+    if not allowed:
+        # Local file:// development sends Origin: null. Same-origin requests
+        # do not need CORS headers at all.
+        return "null" if origin == "null" else None
+    return origin if origin in allowed else None
+
+
 def valid_coordinate(value, minimum: float, maximum: float) -> bool:
     if isinstance(value, bool):
         return False
@@ -181,7 +194,13 @@ class MockHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        cors_origin = allowed_cors_origin(
+            self.headers.get("Origin", ""),
+            os.environ.get("CORS_ORIGIN", ""),
+        )
+        if cors_origin:
+            self.send_header("Access-Control-Allow-Origin", cors_origin)
+            self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
@@ -198,7 +217,13 @@ class MockHandler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
+        cors_origin = allowed_cors_origin(
+            self.headers.get("Origin", ""),
+            os.environ.get("CORS_ORIGIN", ""),
+        )
+        if cors_origin:
+            self.send_header("Access-Control-Allow-Origin", cors_origin)
+            self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.end_headers()
@@ -270,6 +295,8 @@ class MockHandler(BaseHTTPRequestHandler):
             language = str(fields.get("language", "zh-CN"))
             if not text:
                 return error("text 为必填项")
+            if len(text) > MAX_TTS_TEXT_LENGTH:
+                return error(f"text 不能超过 {MAX_TTS_TEXT_LENGTH} 个字符")
             if language not in ("zh-CN", "zh-HK", "en-US"):
                 return error("language 必须是 zh-CN、zh-HK 或 en-US")
             return response({
@@ -289,9 +316,12 @@ class MockHandler(BaseHTTPRequestHandler):
                 return error("latitude 必须是 -90 到 90 之间的有限数字")
             if not valid_coordinate(fields.get("longitude"), -180, 180):
                 return error("longitude 必须是 -180 到 180 之间的有限数字")
-            if report_type == "observation" and not fields.get("speciesId"):
+            species_id = fields.get("speciesId")
+            if report_type == "observation" and (
+                not isinstance(species_id, str) or not species_id.strip()
+            ):
                 return error("observation 必须提供 speciesId")
-            if report_type == "observation" and fields["speciesId"] not in VALID_REPORT_SPECIES:
+            if report_type == "observation" and species_id not in VALID_REPORT_SPECIES:
                 return error("speciesId 不在当前识别目录中")
             return response({"reportId": f"report_{uuid.uuid4().hex[:8]}", "status": "received"})
 

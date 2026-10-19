@@ -43,7 +43,7 @@ python backend/recognition/api.py
 
 接口仍是 `POST /api/recognition/species`。模型文件不存在或无法加载时，`GET /api/health` 会报告 `mangroveModelReady: false`；识别接口在模型不存在时返回 `fallbackRequired: true`、`speciesId: null`，让 A 展示手动选物种。鸟类模型还没有开发，同样返回兜底信号。其他路径目前仍由 mock 响应。
 
-本机默认绑定 `127.0.0.1:8000`。供手机在局域网联调时，可设置 `HOST=0.0.0.0` 和仅用于开发的 `API_TOKEN`；非本机地址未设置 token 时服务会拒绝启动，设置后每个 GET/POST 都需要 `Authorization: Bearer <API_TOKEN>`。图片请求体上限为 15 MiB。不要将服务直接暴露到公网，也不要把 token 提交到仓库。
+本机默认绑定 `127.0.0.1:8000`。供手机在局域网联调时，可设置 `HOST=0.0.0.0` 和仅用于开发的 `API_TOKEN`；非本机地址未设置 token 时服务会拒绝启动，设置后每个 GET/POST 都需要 `Authorization: Bearer <API_TOKEN>`。图片请求体上限为 15 MiB，TTS 文本最多 2000 个字符。跨域开发服务器需额外设置 `CORS_ORIGIN` 白名单；同域 HTTPS 代理不需要 CORS。不要将服务直接暴露到公网，也不要把 token 提交到仓库。
 
 手机相机/GPS 联调优先使用同域 HTTPS 反向代理，由代理持有 token，后端仍监听 `127.0.0.1`；步骤与示例 Caddy 配置见 `docs/deployment.md`。前端代码不应保存 token。
 

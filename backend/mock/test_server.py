@@ -84,6 +84,13 @@ class ContractSmokeTest(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertFalse(result["success"])
 
+    def test_observation_reports_reject_non_string_species_id(self):
+        handler = object.__new__(MockHandler)
+        fields = {"type": "observation", "speciesId": [], "latitude": "20.1", "longitude": "110.2"}
+        status, result = handler.route("/api/reports", fields)
+        self.assertEqual(status, 400)
+        self.assertFalse(result["success"])
+
     def test_oversized_request_is_rejected_before_body_read(self):
         class FakeHandler:
             headers = {"Content-Length": "5", "Content-Type": "application/json"}
@@ -92,6 +99,15 @@ class ContractSmokeTest(unittest.TestCase):
         with patch("server.MAX_REQUEST_BYTES", 4):
             with self.assertRaises(RequestTooLargeError):
                 parse_body(FakeHandler())
+
+    def test_tts_rejects_oversized_text(self):
+        handler = object.__new__(MockHandler)
+        status, result = handler.route(
+            "/api/audio/tts",
+            {"text": "x" * 2001, "language": "zh-CN"},
+        )
+        self.assertEqual(status, 400)
+        self.assertFalse(result["success"])
 
     def test_nonlocal_bind_requires_api_token(self):
         with self.assertRaises(ValueError):
@@ -109,6 +125,19 @@ class ContractSmokeTest(unittest.TestCase):
         self.assertFalse(handler.authorized())
         handler.headers = {"Authorization": "Bearer local-dev-token"}
         self.assertTrue(handler.authorized())
+
+    def test_cors_only_allows_explicit_origins(self):
+        from server import allowed_cors_origin
+
+        self.assertEqual(allowed_cors_origin("null", ""), "null")
+        self.assertIsNone(allowed_cors_origin("https://evil.example", ""))
+        self.assertEqual(
+            allowed_cors_origin("https://demo.example", "https://demo.example"),
+            "https://demo.example",
+        )
+        self.assertIsNone(
+            allowed_cors_origin("https://evil.example", "https://demo.example")
+        )
 
     def test_http_enforces_auth_and_request_size(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), MockHandler)

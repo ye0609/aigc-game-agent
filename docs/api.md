@@ -9,6 +9,7 @@
 - 成功返回 HTTP 200；参数错误返回 400；未登录或无权限返回 401/403；请求体超过 15 MiB 返回 413；服务异常返回 500
 - 每个响应包含 `requestId`，便于联调排查
 - `POST /reports` 的 `observation.speciesId` 必须来自 `data/species.catalog.json` 中当前已接入识别的物种；尚未接入识别的本地展示物种不能上报
+- TTS 的 `text` 最多 2000 个字符；超过上限返回 400
 - 本机默认服务地址只监听 `127.0.0.1`。手机联调与二维码演示使用同域 HTTPS 反向代理：代理从环境变量读取 `API_TOKEN` 并添加 `Authorization: Bearer <API_TOKEN>`，后端仍监听本机，浏览器只请求 `/api`，不得在 `index.html` 中放 token。局域网直接调用后端时也可设置 `HOST=0.0.0.0` 和 `API_TOKEN`，但不得用于公开部署；具体配置见 `docs/deployment.md`
 
 ## 1. 物种识别

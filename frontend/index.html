@@ -579,7 +579,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
           <path d="M0 -8 L4 5 L0 2 L-4 5 Z" fill="#E26D3C"/>
           <text y="20" text-anchor="middle" font-size="9" fill="#5B6F66">N</text>
         </g>
-        <text x="12" y="420" font-size="10" fill="#5B6F66">示意底图 · 坐标待 C 校准后接入真实地图 SDK</text>
+        <text x="12" y="420" font-size="10" fill="#5B6F66">示意底图 · 站点中心已接入，路线待现场 GPS 采集</text>
       </svg>
       <div class="map-legend">
         <span><i style="background:var(--accent)"></i>核心点位</span>
@@ -1063,6 +1063,71 @@ function apiReport(fd){return apiPost('/reports',fd,true)}
 function speciesByApiId(apiId){
   for(var k in API_ID_MAP){if(API_ID_MAP[k]===apiId){var arr=SPECIES.filter(function(x){return x.id===k});if(arr.length)return arr[0]}}
   return null;
+}
+function dataUrlCandidates(path){
+  var result=[];
+  var pathname=window.location.pathname||'';
+  if(window.location.protocol==='file:'||pathname.indexOf('/frontend/')>=0)result.push('../'+path);
+  result.push('/'+path);
+  result.push('../'+path);
+  return result.filter(function(url,i){return result.indexOf(url)===i});
+}
+function fetchData(path){
+  var candidates=dataUrlCandidates(path);
+  function attempt(index){
+    if(index>=candidates.length)return Promise.resolve(null);
+    return fetch(candidates[index],{cache:'no-store'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      return r.json();
+    }).catch(function(){return attempt(index+1)});
+  }
+  return attempt(0);
+}
+function applySpeciesRecord(record){
+  if(!record||!record.speciesId)return false;
+  var sp=speciesByApiId(record.speciesId);
+  if(!sp)return false;
+  var description=record.description||{};
+  var languages=record.languages||{};
+  if(record.name)sp.name=record.name;
+  if(record.protectionLevel)sp.level=record.protectionLevel;
+  if(description.behavior||description.habitat)sp.intro=description.behavior||description.habitat;
+  if(record.audio&&record.audio.birdCall)sp.call=record.audio.birdCall;
+  sp.speak={
+    zh:languages['zh-CN']||sp.speak.zh,
+    yue:languages['zh-HK']||sp.speak.yue,
+    en:languages['en-US']||sp.speak.en
+  };
+  return true;
+}
+function applySiteRecords(records){
+  if(!Array.isArray(records))return false;
+  var changed=false;
+  records.forEach(function(record){
+    var site=SITES.filter(function(item){return item.id===record.siteId})[0];
+    if(!site)return;
+    if(record.name)site.name=record.name;
+    if(typeof record.latitude==='number'&&typeof record.longitude==='number'){
+      site.coords=record.latitude.toFixed(6)+'°N, '+record.longitude.toFixed(6)+'°E（站点中心）';
+      SITE_LL[site.id]=[record.longitude,record.latitude];
+    }
+    if(record.description)site.desc=record.description;
+    var shelters=Array.isArray(record.birdWatchingShelters)?record.birdWatchingShelters:[];
+    var points=shelters.map(function(item){return item.name}).filter(Boolean);
+    if(Array.isArray(record.route)&&record.route.length)points.unshift('现场路线已采集');
+    site.points=points;
+    changed=true;
+  });
+  return changed;
+}
+function loadRemoteData(){
+  var speciesLoads=SPECIES.filter(function(sp){return sp.category==='plant'&&API_ID_MAP[sp.id]}).map(function(sp){
+    return fetchData('data/species/'+API_ID_MAP[sp.id]+'.json').then(applySpeciesRecord);
+  });
+  return Promise.all([
+    Promise.all(speciesLoads),
+    fetchData('data/sites.json').then(applySiteRecords)
+  ]).then(function(results){return results[0].some(Boolean)||!!results[1]});
 }
 
 /* ================= 状态与本地存储 ================= */
@@ -1584,6 +1649,14 @@ renderGuide();
 renderCarbon();
 bindEvents();
 route();
+loadRemoteData().then(function(changed){
+  if(!changed)return;
+  renderHome();
+  renderManual();
+  renderGuide();
+  renderMap();
+  route();
+});
 })();
 </script>
 

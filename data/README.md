@@ -36,9 +36,9 @@ python data/test_species_data.py -v
 
 `data/sites.json` 是三个研学地点的数组，字段必须符合 `sites.schema.json`：
 
-- `gaoqiao-mangrove`：高桥红树林
-- `texing-island`：特呈岛红树林
-- `jinniu-island`：金牛岛红树林
+- `gaoqiao`：高桥红树林
+- `texing`：特呈岛红树林
+- `jinniu`：金牛岛红树林
 
 坐标统一使用 **WGS-84**；高德/腾讯地图接入前由 A 转成 GCJ-02。站点中心已按公开地图核实，`route` 和 `birdWatchingShelters` 目前为空，因为公开资料没有栈道拐点和观鸟屋的精确坐标；现场 GPS 采集后填入，并删除 `description` 里的“待现场 GPS 校准”。来源和采集清单见 `docs/sites.sources.md`。
 
