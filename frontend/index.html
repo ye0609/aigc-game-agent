@@ -125,7 +125,7 @@ ul,ol{list-style:none}
 .spec-card .thumb svg{height:84px;width:auto}
 .media-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 .media-wrap img{width:100%;height:100%;object-fit:cover}
-.media-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.media-fallback{display:none;align-items:center;justify-content:center;width:100%;height:100%}
 .media-fallback svg{max-width:100%;max-height:100%}
 .spec-card .thumb .ok{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--pine);color:#fff;display:none;align-items:center;justify-content:center}
 .spec-card .thumb .ok svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
@@ -393,14 +393,14 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
       <canvas id="shotCanvas" style="display:none"></canvas>
       <div class="empty" id="arEmpty">
         <svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.4"/></svg>
-        <p style="font-size:13px">相机未开启（需 HTTPS 或本机 localhost）<br>可点下方「拍照」走演示模式</p>
+        <p style="font-size:13px">相机未开启（需 HTTPS 或本机 localhost）<br>请检查权限，或在下方手动选择物种</p>
       </div>
       <div class="ar-frame" id="arFrame" style="display:none"></div>
       <div class="scan-line" id="scanLine" style="display:none"></div>
       <div class="ar-scanning" id="arScanning" style="display:none">
         <div class="spinner"></div>
         <div style="font-size:14px;font-weight:600">正在识别物种…</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.7)">模拟识别（接入 B 的分类器后为真实识别）</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7)">正在请求识别接口</div>
       </div>
       <div class="ar-floating" id="arFloat" style="display:none"></div>
     </div>
@@ -418,12 +418,12 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
     <div class="card" style="margin-top:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <b style="font-size:14.5px">手动选择（识别失败兜底）</b>
-        <span class="chip chip-pine">GPS 点位触发同样可用</span>
+        <span class="chip chip-pine">地图可模拟到点</span>
       </div>
       <div class="manual-grid" id="manualGrid"></div>
     </div>
 
-    <div class="demo-note">演示说明：此版为模拟识别 + 手动选择兜底，对应方案里「识别率风险规避」策略；B 的 4 种红树自训分类器与 Merlin 鸟类接口就绪后，替换 <code>mockRecognize()</code> 即可，浮层 UI 不变。</div>
+    <div class="demo-note">当前红树模型未达到演示就绪条件，鸟类模型尚未接入；拍照后若接口要求兜底，请手动选择物种。地图的到点卡片目前需手动模拟，尚未接入真实 GPS 触发。</div>
   </section>
 
   <!-- ===== 视图：物种详情 ===== -->
@@ -1044,11 +1044,10 @@ function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMont
 
 /* ================= B 的接口客户端（docs/api.md v1，mock 优先，失败自动降级本地） ================= */
 var API_BASE=(function(){
-  // 部署到手机/局域网时：H5 与后端同域部署，用相对路径 /api，避免写死 127.0.0.1
-  // 本机开发时：file:// 或 localhost 直连本机 mock server
   var h=window.location.hostname||'';
-  if(h&&h!=='127.0.0.1'&&h!=='localhost')return '/api';
-  return 'http://127.0.0.1:8000/api';
+  if(window.location.protocol==='file:')return 'http://127.0.0.1:8000/api';
+  if(window.location.protocol==='http:'&&(h==='localhost'||h==='127.0.0.1'))return 'http://127.0.0.1:8000/api';
+  return '/api';
 })();
 var API_ID_MAP={
   qiujia:'mangrove-kandelia-obovata',
@@ -1118,12 +1117,14 @@ function bindMediaFallback(root){
   var images=typeof root==='string'?$(root):root;
   if(!images)return;
   (images.matches&&images.matches('img[data-media-image]')?[images]:$$('img[data-media-image]',images)).forEach(function(img){
-    img.addEventListener('error',function(){
+    function showFallback(){
       img.style.display='none';
       var fallback=img.parentNode&&img.parentNode.querySelector('.media-fallback');
       if(fallback)fallback.style.display='flex';
       console.warn('[asset] failed to load image:',img.src);
-    });
+    }
+    img.addEventListener('error',showFallback,{once:true});
+    if(img.complete&&!img.naturalWidth)showFallback();
   });
 }
 function applySpeciesRecord(record){
@@ -1135,11 +1136,11 @@ function applySpeciesRecord(record){
   if(record.name)sp.name=record.name;
   if(record.protectionLevel)sp.level=record.protectionLevel;
   if(description.behavior||description.habitat)sp.intro=description.behavior||description.habitat;
-  if(record.audio&&record.audio.birdCall)sp.call=record.audio.birdCall;
+  if(record.audio&&record.audio.birdCall)sp.call='鸟叫录音';
   if(Array.isArray(record.images)&&record.images.length)sp.imageUrl=assetUrl(record.images[0]);
   if(record.audio){
-    var audioPath=record.audio.birdCall||record.audio.explanation||'';
-    if(audioPath)sp.audioUrl=assetUrl(audioPath);
+    if(record.audio.birdCall)sp.audioUrl=assetUrl(record.audio.birdCall);
+    if(record.audio.explanation)sp.explanationUrl=assetUrl(record.audio.explanation);
   }
   sp.speak={
     zh:languages['zh-CN']||sp.speak.zh,
@@ -1189,6 +1190,7 @@ function collectStats(){var n=0,plant=0,bird=0,benthic=0;SPECIES.forEach(functio
 var VIEWS={home:'view-home',ar:'view-ar',species:'view-species',guide:'view-guide',map:'view-map',timeline:'view-timeline',study:'view-study',carbon:'view-carbon'};
 var TAB_MAP={home:'home',ar:'ar',map:'map',guide:'guide',study:'study',species:'ar',timeline:'home',carbon:'home'};
 function showView(r){
+  if(r!=='ar')stopCamera();
   $$('.view').forEach(function(v){v.classList.remove('active')});
   var el=$( '#'+VIEWS[r]);if(el)el.classList.add('active');
   var tabKey=TAB_MAP[r]||'home';
@@ -1211,6 +1213,7 @@ function go(route){
   if(r==='timeline')renderTimeline();
   if(r==='study')renderStudy();
   if(r==='carbon')renderCarbon();
+  if(r==='ar')initCamera();
 }
 function route(){go((location.hash||'#home').replace('#',''))}
 window.addEventListener('hashchange',route);
@@ -1394,28 +1397,35 @@ function playCall(sp){
   toast('暂无真实音频，已使用模拟音效');
 }
 
-/* ================= AR 相机（拍照 → 模拟识别 → 浮层） ================= */
+/* ================= AR 相机（拍照 → 识别接口 → 浮层） ================= */
 var stream=null;
 function initCamera(){
+  if(stream)return;
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return;
   navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false})
   .then(function(s){
+    if(!$('#view-ar').classList.contains('active')){s.getTracks().forEach(function(track){track.stop()});return}
     stream=s;var v=$('#arVideo');v.srcObject=s;v.style.display='block';
     $('#arEmpty').style.display='none';
     $('#arFrame').style.display='block';$('#scanLine').style.display='block';
   })
-  .catch(function(){/* 保持演示模式：无摄像头/无 HTTPS 时自动走模拟识别 */});
+  .catch(function(){toast('无法开启相机，请检查权限或手动选择物种')});
+}
+function stopCamera(){
+  if(stream){stream.getTracks().forEach(function(track){track.stop()});stream=null}
+  var video=$('#arVideo');if(video){video.srcObject=null;video.style.display='none'}
+  var empty=$('#arEmpty');if(empty)empty.style.display='flex';
+  var frame=$('#arFrame'),scan=$('#scanLine');if(frame)frame.style.display='none';if(scan)scan.style.display='none';
 }
 var AR_MODE='mangrove';
 function takeShot(){
   var v=$('#arVideo'),cv=$('#shotCanvas');
-  if(stream&&v.readyState>=2){
-    try{
-      cv.width=v.videoWidth||640;cv.height=v.videoHeight||480;
-      cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);
-      cv.style.display='block';
-    }catch(e){}
-  }
+  if(!stream||v.readyState<2){toast('相机不可用，请检查权限或手动选择物种');return}
+  try{
+    cv.width=v.videoWidth||640;cv.height=v.videoHeight||480;
+    cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);
+    cv.style.display='block';
+  }catch(e){toast('无法截取画面，请重试');return}
   var f=$('#arFloat');if(f)f.style.display='none';
   $('#arScanning').style.display='flex';
   cv.toBlob(function(blob){
@@ -1577,7 +1587,7 @@ function renderCarbon(){
 function bindEvents(){
   $$('.tab').forEach(function(t){t.onclick=function(){go(t.getAttribute('data-tab'))}});
   $$('[data-back]').forEach(function(b){b.onclick=function(){var r=b.getAttribute('data-back');if(r==='<back>')r=STATE.detailBack||'guide';go(r)}});
-  $('#goArBtn').onclick=function(){go('ar');initCamera()};
+  $('#goArBtn').onclick=function(){go('ar')};
   $('#goCarbonBtn').onclick=function(){go('carbon')};
   $('#shutterBtn').onclick=takeShot;
   $('#arModeMangrove').onclick=function(){AR_MODE='mangrove';this.classList.add('on');$('#arModeBird').classList.remove('on')};
@@ -1676,15 +1686,27 @@ function bindEvents(){
     var lc=langCode(STATE.lang||'zh');
     var apiId=API_ID_MAP[sp.id];
     var localText=sp.speak[STATE.lang||'zh'];
+    function speakExplanation(script){
+      apiTts(script,lc).then(function(t){
+        if(!t.audioUrl)throw new Error('TTS audio unavailable');
+        var a=new Audio(t.audioUrl);
+        a.play().catch(function(){speakText(script,STATE.lang||'zh')});
+      }).catch(function(){speakText(script,STATE.lang||'zh')});
+    }
+    if(STATE.lang==='zh'&&sp.explanationUrl){
+      if(currentAudio){currentAudio.pause();currentAudio=null}
+      var recorded=new Audio(sp.explanationUrl);currentAudio=recorded;
+      recorded.play().then(function(){toast('正在播放物种讲解录音')}).catch(function(){
+        if(apiId)apiExplain(apiId,lc,'student').then(function(d){speakExplanation(d.script)}).catch(function(){speakText(localText,STATE.lang||'zh')});
+        else speakText(localText,STATE.lang||'zh');
+      });
+      return;
+    }
     if(!apiId){speakText(localText,STATE.lang||'zh');return}
     apiExplain(apiId,lc,'student').then(function(d){
       $('#spIntro').textContent=d.script;
       toast('AI 讲解稿已生成（约 '+d.durationSeconds+'s），正在播报…');
-      apiTts(d.script,lc).then(function(t){
-        if(!t.audioUrl)throw new Error('TTS audio unavailable');
-        var a=new Audio(t.audioUrl);
-        a.play().catch(function(){speakText(d.script,STATE.lang||'zh')});
-      }).catch(function(){speakText(d.script,STATE.lang||'zh')});
+      speakExplanation(d.script);
     }).catch(function(){speakText(localText,STATE.lang||'zh');toast('讲解接口不可达，已用本地语音')});
   };
   $('#askBtn').onclick=function(){

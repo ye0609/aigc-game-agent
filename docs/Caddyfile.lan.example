@@ -9,9 +9,18 @@ https://{$DEMO_HOST} {
         }
     }
 
-    handle_path /data/* {
-        root * ./data
+    handle /data/species/* {
+        root * .
         file_server
+    }
+
+    handle /data/sites.json {
+        root * .
+        file_server
+    }
+
+    handle /data/* {
+        respond 404
     }
 
     handle_path /assets/* {

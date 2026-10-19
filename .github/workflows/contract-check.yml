@@ -27,3 +27,5 @@ jobs:
       - name: Run recognition baseline tests
         working-directory: backend/recognition
         run: python -m unittest test_recognition.py -v
+      - name: Run training dataset manifest tests
+        run: python -m unittest tools.test_collect_training_images -v
