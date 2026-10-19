@@ -14,6 +14,11 @@ https://{$DEMO_HOST} {
         file_server
     }
 
+    handle_path /assets/* {
+        root * ./assets
+        file_server
+    }
+
     handle {
         file_server
     }

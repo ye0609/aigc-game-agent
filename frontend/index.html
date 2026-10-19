@@ -123,6 +123,10 @@ ul,ol{list-style:none}
 .spec-card{background:var(--card);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);border:1px solid rgba(228,219,200,.5)}
 .spec-card .thumb{height:104px;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#EAF3E4,#DCE9DE);position:relative}
 .spec-card .thumb svg{height:84px;width:auto}
+.media-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.media-wrap img{width:100%;height:100%;object-fit:cover}
+.media-fallback{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.media-fallback svg{max-width:100%;max-height:100%}
 .spec-card .thumb .ok{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--pine);color:#fff;display:none;align-items:center;justify-content:center}
 .spec-card .thumb .ok svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .spec-card.collected .thumb .ok{display:flex}
@@ -134,6 +138,9 @@ ul,ol{list-style:none}
 /* ============ species detail ============ */
 .detail-hero{position:relative;border-radius:20px;overflow:hidden;background:linear-gradient(165deg,var(--deep),#1C4F3B);min-height:230px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:var(--shadow-lg)}
 .detail-hero svg{height:150px;width:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.3))}
+.detail-hero .media-wrap img{width:100%;height:230px;object-fit:cover}
+.detail-hero .media-fallback svg{height:150px;width:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.3))}
+.detail-hero>#spArt{width:100%;height:230px;display:flex;align-items:center;justify-content:center}
 .detail-hero .lvl{position:absolute;top:14px;right:14px}
 .detail-hero .play{position:absolute;bottom:14px;right:14px;width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;color:#fff}
 .detail-hero .play svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -234,6 +241,8 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
 .ar-floating .row{display:flex;align-items:center;gap:10px}
 .ar-floating .mini{flex:none;width:44px;height:44px;border-radius:11px;background:linear-gradient(160deg,#EAF3E4,#DCE9DE);display:flex;align-items:center;justify-content:center}
 .ar-floating .mini svg{height:36px;width:auto}
+.ar-floating .mini .media-wrap img{width:44px;height:44px;object-fit:cover;border-radius:11px}
+.ar-floating .mini .media-fallback svg{height:36px;width:auto}
 .ar-floating h4{font-size:15px;font-weight:800}
 .ar-floating .latin{font-size:11px;color:var(--ink-2);font-style:italic}
 .ar-floating .btns{display:flex;gap:8px;margin-top:10px}
@@ -245,6 +254,8 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
 .manual-item:active{transform:scale(.95)}
 .manual-item .ico{height:30px;display:flex;align-items:center;justify-content:center}
 .manual-item .ico svg{height:26px;width:auto}
+.manual-item .ico .media-wrap img{width:30px;height:30px;object-fit:cover;border-radius:7px}
+.manual-item .ico .media-fallback svg{height:26px;width:auto}
 .manual-item.on{border-color:var(--pine);background:rgba(30,107,76,.1);color:var(--pine)}
 
 /* ============ guide ============ */
@@ -1072,16 +1083,48 @@ function dataUrlCandidates(path){
   result.push('../'+path);
   return result.filter(function(url,i){return result.indexOf(url)===i});
 }
+function assetUrl(path){
+  if(!path)return '';
+  path=String(path).replace(/^\/+/, '');
+  var pathname=window.location.pathname||'';
+  if(window.location.protocol==='file:'||pathname.indexOf('/frontend/')>=0)return '../'+path;
+  return '/'+path;
+}
+var dataWarningShown={};
 function fetchData(path){
   var candidates=dataUrlCandidates(path);
   function attempt(index){
-    if(index>=candidates.length)return Promise.resolve(null);
+    if(index>=candidates.length){
+      if(!dataWarningShown[path]){
+        dataWarningShown[path]=true;
+        console.warn('[data] failed to load:',path);
+        if(window.location.protocol!=='file:')toast('共享数据加载失败，当前使用内置演示数据');
+      }
+      return Promise.resolve(null);
+    }
     return fetch(candidates[index],{cache:'no-store'}).then(function(r){
       if(!r.ok)throw new Error('HTTP '+r.status);
       return r.json();
     }).catch(function(){return attempt(index+1)});
   }
   return attempt(0);
+}
+function mediaMarkup(sp,className){
+  if(!sp.imageUrl)return sp.art;
+  return '<span class="media-wrap"><img class="'+esc(className||'')+'" src="'+esc(sp.imageUrl)+'" alt="'+esc(sp.name)+'" data-media-image><span class="media-fallback">'+sp.art+'</span></span>';
+}
+function bindMediaFallback(root){
+  if(!root)return;
+  var images=typeof root==='string'?$(root):root;
+  if(!images)return;
+  (images.matches&&images.matches('img[data-media-image]')?[images]:$$('img[data-media-image]',images)).forEach(function(img){
+    img.addEventListener('error',function(){
+      img.style.display='none';
+      var fallback=img.parentNode&&img.parentNode.querySelector('.media-fallback');
+      if(fallback)fallback.style.display='flex';
+      console.warn('[asset] failed to load image:',img.src);
+    });
+  });
 }
 function applySpeciesRecord(record){
   if(!record||!record.speciesId)return false;
@@ -1093,6 +1136,11 @@ function applySpeciesRecord(record){
   if(record.protectionLevel)sp.level=record.protectionLevel;
   if(description.behavior||description.habitat)sp.intro=description.behavior||description.habitat;
   if(record.audio&&record.audio.birdCall)sp.call=record.audio.birdCall;
+  if(Array.isArray(record.images)&&record.images.length)sp.imageUrl=assetUrl(record.images[0]);
+  if(record.audio){
+    var audioPath=record.audio.birdCall||record.audio.explanation||'';
+    if(audioPath)sp.audioUrl=assetUrl(audioPath);
+  }
   sp.speak={
     zh:languages['zh-CN']||sp.speak.zh,
     yue:languages['zh-HK']||sp.speak.yue,
@@ -1216,10 +1264,11 @@ function arriveDemo(id){
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'+(s.points.length?s.points.map(function(p){return '<span class="chip chip-sea">'+esc(p)+'</span>'}).join(''):'<span class="chip chip-accent">路线与观鸟屋待现场 GPS 校准</span>')+'</div></div>'+
     '<div style="font-size:13px;font-weight:700;margin:4px 0 8px">这里推荐观察：</div>'+
     '<div class="spec-grid" style="grid-template-columns:repeat(3,1fr)">'+hot.map(function(sp){
-      return '<button class="manual-item" data-sp="'+sp.id+'" style="border-color:var(--line)"><span class="ico">'+sp.art+'</span>'+esc(sp.name)+'</button>';
+      return '<button class="manual-item" data-sp="'+sp.id+'" style="border-color:var(--line)"><span class="ico">'+mediaMarkup(sp,'manual-media')+'</span>'+esc(sp.name)+'</button>';
     }).join('')+'</div>'+
     '<button class="btn btn-ghost-pine btn-block" style="margin-top:12px" id="arriveSpeak">播报点位讲解（普通话）</button>';
   showModal($('#modal'));
+  bindMediaFallback($('.modal-body'));
   $('#arriveSpeak').onclick=function(){speakText('欢迎来到'+s.name+'。'+s.desc,'zh')};
 }
 
@@ -1259,10 +1308,11 @@ function renderGuide(){
   $('#guideGrid').innerHTML=list.map(function(sp){
     var got=!!STATE.collected[sp.id];
     return '<div class="spec-card'+(got?' collected':'')+'" data-sp="'+sp.id+'">'+
-      '<div class="thumb">'+sp.art+'<span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span></div>'+
+      '<div class="thumb">'+mediaMarkup(sp,'guide-media')+'<span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span></div>'+
       '<div class="body"><h4>'+esc(sp.name)+'</h4><div class="latin">'+esc(sp.latin)+'</div>'+
       '<div class="tags"><span class="chip chip-pine">'+CAT_NAME[sp.category]+'</span>'+(got?'<span class="chip chip-gold">已收录</span>':'<span class="chip">未收录</span>')+'</div></div></div>';
   }).join('');
+  bindMediaFallback($('#guideGrid'));
 }
 
 /* ================= Modal ================= */
@@ -1291,7 +1341,8 @@ function speakText(text,lang){
   u.lang=want;u.rate=0.95;
   speechSynthesis.speak(u);
 }
-function playCall(sp){
+var currentAudio=null;
+function playSyntheticCall(sp){
   try{
     var AC=window.AudioContext||window.webkitAudioContext;
     if(!AC){toast('浏览器不支持音频合成');return}
@@ -1323,8 +1374,24 @@ function playCall(sp){
         o2.connect(g3).connect(ctx.destination);o2.start(t0+k*0.22);o2.stop(t0+k*0.22+0.12);
       }
     }
-    toast('已播放'+sp.name+(sp.category==='bird'?'叫声(模拟)':'音效(模拟)')+' · 真实音频待 C 交付');
+    toast('已播放'+sp.name+(sp.category==='bird'?'叫声(模拟)':'音效(模拟)'));
   }catch(e){toast('无法播放音效')}
+}
+function playCall(sp){
+  if(sp.audioUrl){
+    try{
+      if(currentAudio){currentAudio.pause();currentAudio=null}
+      var audio=new Audio(sp.audioUrl);currentAudio=audio;audio.preload='auto';
+      var result=audio.play();
+      if(result&&result.then)result.then(function(){toast('已播放'+sp.name+'真实音频')}).catch(function(){playSyntheticCall(sp);toast('真实音频不可用，已使用模拟音效')});
+      else toast('已播放'+sp.name+'真实音频');
+      return;
+    }catch(e){
+      playSyntheticCall(sp);toast('真实音频不可用，已使用模拟音效');return;
+    }
+  }
+  playSyntheticCall(sp);
+  toast('暂无真实音频，已使用模拟音效');
 }
 
 /* ================= AR 相机（拍照 → 模拟识别 → 浮层） ================= */
@@ -1376,7 +1443,7 @@ function recognize(sp,via){
 function showFloat(sp){
   var f=$('#arFloat');
   f.innerHTML='<div class="row">'+
-    '<div class="mini">'+sp.art+'</div>'+
+    '<div class="mini">'+mediaMarkup(sp,'float-media')+'</div>'+
     '<div style="flex:1;min-width:0"><h4>'+esc(sp.name)+'</h4><div class="latin">'+esc(sp.latin)+'</div>'+
     '<span class="badge-level '+sp.levelClass+'" style="margin-top:5px">'+esc(sp.level.split('·')[0])+'</span></div>'+
     '<button class="btn btn-ghost btn-sm" id="floatClose" aria-label="关闭">✕</button></div>'+
@@ -1386,6 +1453,7 @@ function showFloat(sp){
       '<button class="btn btn-pine" id="floatAgain">再识别一次</button>'+
     '</div>';
   f.style.display='block';
+  bindMediaFallback(f);
   $('#floatClose').onclick=function(){f.style.display='none'};
   $('#floatDetail').onclick=function(){go('species-from/ar/'+sp.id)};
   $('#floatAgain').onclick=function(){f.style.display='none';takeShot()};
@@ -1393,8 +1461,9 @@ function showFloat(sp){
 }
 function renderManual(){
   $('#manualGrid').innerHTML=SPECIES.map(function(sp){
-    return '<button class="manual-item" data-sp="'+sp.id+'"><span class="ico">'+sp.art+'</span>'+esc(sp.name)+'</button>';
+    return '<button class="manual-item" data-sp="'+sp.id+'"><span class="ico">'+mediaMarkup(sp,'manual-media')+'</span>'+esc(sp.name)+'</button>';
   }).join('');
+  bindMediaFallback($('#manualGrid'));
 }
 
 /* ================= 物种详情 ================= */
@@ -1404,7 +1473,8 @@ function renderSpecies(id){
   $('#spLatin').textContent=sp.latin;
   $('#spBadge').innerHTML='<span class="badge-level '+sp.levelClass+'">'+esc(sp.level.split('·')[0])+'</span>';
   $('#spLevel').innerHTML='<span class="badge-level '+sp.levelClass+'">'+esc(sp.level)+'</span>';
-  $('#spArt').innerHTML=sp.art;
+  $('#spArt').innerHTML=mediaMarkup(sp,'detail-media');
+  bindMediaFallback($('#spArt'));
   $('#spIntro').textContent=sp.speak[STATE.lang||'zh'];
   $('#spFacts').innerHTML=
     '<div class="info-row" style="padding-top:14px"><b>习性</b><span style="max-width:66%">'+esc(sp.intro)+'</span></div>'+
