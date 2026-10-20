@@ -93,7 +93,8 @@ def train(root: Path, catalog: Path, output: Path, min_per_class: int, groups_pa
     }
     model.save(output)
     metrics["modelSha256"] = file_sha256(output)
-    write_metrics(output.with_name("metrics.json"), metrics)
+    metrics_name = "metrics.json" if output.stem == "model" else f"{output.stem}.metrics.json"
+    write_metrics(output.with_name(metrics_name), metrics)
     return metrics
 
 

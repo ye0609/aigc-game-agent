@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from functools import lru_cache
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
@@ -19,9 +20,10 @@ sys.path.insert(0, str(ROOT))
 
 from backend.mock.server import MockHandler, error, has_valid_image, response, validate_bind_security  # noqa: E402
 from backend.recognition.classifier import CentroidClassifier, file_sha256, image_feature  # noqa: E402
+from backend.recognition.onnx_model import OnnxClassifier  # noqa: E402
 
 
-MODEL_PATH = ROOT / "backend/recognition/artifacts/model.npz"
+MODEL_PATH = ROOT / "backend/recognition/artifacts/model.onnx"
 METRICS_PATH = ROOT / "backend/recognition/artifacts/metrics.json"
 CATALOG_PATH = ROOT / "data/species.catalog.json"
 CONFIDENCE_THRESHOLD = 0.65
@@ -41,11 +43,28 @@ def fallback_result(mode: str) -> dict:
 def load_ready_model(model_path: Path = MODEL_PATH, metrics_path: Path | None = None):
     metrics_path = metrics_path or (METRICS_PATH if model_path == MODEL_PATH else model_path.with_name("metrics.json"))
     try:
+        model_stat = model_path.stat()
+        metrics_stat = metrics_path.stat()
+        catalog_stat = CATALOG_PATH.stat()
+    except OSError as exc:
+        raise ValueError(f"模型、评估指标或物种目录不可读：{exc}") from exc
+    return _load_ready_model_cached(
+        model_path, metrics_path, model_stat.st_mtime_ns, model_stat.st_size,
+        metrics_stat.st_mtime_ns, metrics_stat.st_size, catalog_stat.st_mtime_ns,
+    )
+
+
+@lru_cache(maxsize=4)
+def _load_ready_model_cached(model_path, metrics_path, model_mtime, model_size, metrics_mtime, metrics_size, catalog_mtime):
+    try:
         metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError(f"评估指标文件无效：{exc}") from exc
     if not isinstance(metrics, dict) or metrics.get("readyForDemo") is not True:
         raise ValueError("模型评估未达到演示就绪条件")
+    accuracy = metrics.get("validationAccuracy")
+    if isinstance(accuracy, bool) or not isinstance(accuracy, (int, float)) or not 0.75 <= accuracy <= 1:
+        raise ValueError("模型分组验证准确率未达到 0.75")
     expected_sha256 = metrics.get("modelSha256")
     if not isinstance(expected_sha256, str) or len(expected_sha256) != 64:
         raise ValueError("评估指标缺少有效的 modelSha256")
@@ -55,7 +74,6 @@ def load_ready_model(model_path: Path = MODEL_PATH, metrics_path: Path | None = 
         raise ValueError(f"模型文件不可读：{exc}") from exc
     if actual_sha256 != expected_sha256.lower():
         raise ValueError("模型文件与评估指标不匹配")
-    model = CentroidClassifier.load(model_path)
     catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
     if not isinstance(catalog, list) or any(not isinstance(item, dict) for item in catalog):
         raise ValueError("物种目录格式无效")
@@ -63,6 +81,22 @@ def load_ready_model(model_path: Path = MODEL_PATH, metrics_path: Path | None = 
     if any(not isinstance(item.get("speciesId"), str) or not item["speciesId"] for item in mangroves):
         raise ValueError("红树物种目录缺少有效 speciesId")
     expected_labels = {item["speciesId"] for item in mangroves}
+    if model_path.suffix == ".onnx":
+        labels = metrics.get("classes")
+        if (
+            metrics.get("model") != "resnet18-onnx-v1"
+            or metrics.get("validationSplit") != "grouped-by-group_id"
+            or not isinstance(labels, list)
+            or not all(isinstance(label, str) for label in labels)
+        ):
+            raise ValueError("ONNX 模型指标缺少模型版本或类别顺序")
+        if len(labels) != len(set(labels)) or set(labels) != expected_labels:
+            raise ValueError("ONNX 模型类别与当前红树物种目录不匹配")
+        model = OnnxClassifier(model_path, labels)
+    elif model_path.suffix == ".npz":
+        model = CentroidClassifier.load(model_path)
+    else:
+        raise ValueError("不支持的模型文件类型")
     if not expected_labels or set(model.labels) != expected_labels:
         raise ValueError("模型类别与当前红树物种目录不匹配")
     return model, catalog
@@ -71,7 +105,7 @@ def load_ready_model(model_path: Path = MODEL_PATH, metrics_path: Path | None = 
 def model_is_ready(model_path: Path = MODEL_PATH) -> bool:
     try:
         load_ready_model(model_path)
-    except (OSError, ValueError):
+    except (OSError, ValueError, RuntimeError):
         return False
     return True
 
@@ -90,12 +124,14 @@ def recognize(fields: dict, model_path: Path = MODEL_PATH) -> tuple[int, dict]:
 
     try:
         model, catalog = load_ready_model(model_path)
-    except (OSError, ValueError):
+    except (OSError, ValueError, RuntimeError):
         return response(fallback_result(mode))
 
     try:
-        feature = image_feature(image["content"])
-        prediction = model.predict(feature)
+        if isinstance(model, OnnxClassifier):
+            prediction = model.predict(image["content"])
+        else:
+            prediction = model.predict(image_feature(image["content"]))
     except (ValueError, RuntimeError) as exc:
         return error(f"识别失败：{exc}", 400)
 

@@ -44,7 +44,8 @@ python backend/recognition/api.py
 ```powershell
 python tools/collect_training_images.py --restore
 python backend/recognition/dataset.py --root data/recognition --min-per-class 30
-python backend/recognition/train.py --root data/recognition --min-per-class 30
+python -m pip install -r backend/recognition/requirements-train.txt
+python backend/recognition/train_resnet18.py --root data/recognition --min-per-class 30
 ```
 
-训练图片目录被 `.gitignore` 忽略，脚本默认只校验来源清单和 SHA-256；从 GitHub 新 clone 后用 `--restore` 下载清单中的缺失图片。当前基线准确率低于 0.75，训练会把模型标为未达到演示就绪条件。
+训练图片目录被 `.gitignore` 忽略，脚本默认只校验来源清单和 SHA-256；从 GitHub 新 clone 后用 `--restore` 下载清单中的缺失图片。当前 centroid 基线准确率低于 0.75；ResNet18 的实际结果以新训练生成的 `metrics.json` 为准。未达标时服务继续使用手动选择兜底。

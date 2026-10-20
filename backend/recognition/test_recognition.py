@@ -107,6 +107,17 @@ class DatasetTest(unittest.TestCase):
             )
             self.assertFalse(model_is_ready(output))
 
+    def test_health_check_rejects_ready_flag_below_accuracy_threshold(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+            output = Path(temporary) / "model.npz"
+            labels = [item["speciesId"] for item in load_catalog(ROOT / "data/species.catalog.json")]
+            CentroidClassifier.fit(np.zeros((4, FEATURE_SIZE), dtype=np.float32), labels, labels).save(output)
+            output.with_name("metrics.json").write_text(
+                json.dumps({"validationAccuracy": 0.42, "readyForDemo": True, "modelSha256": file_sha256(output)}),
+                encoding="utf-8",
+            )
+            self.assertFalse(model_is_ready(output))
+
     def test_health_check_accepts_matching_ready_metrics(self):
         with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
             output = Path(temporary) / "model.npz"
