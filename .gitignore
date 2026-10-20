@@ -32,3 +32,4 @@ Thumbs.db
 # generated recognition artifacts
 backend/recognition/artifacts/
 data/recognition/*/
+data/recognition-expansion-20261020/*/
