@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-当前进度：接口 mock、协作规则、红树识别数据集清单和基线评估已完成。仓库登记了 147 张公开许可图片的来源，但图片本体在本地或共享存储中，不提交 GitHub；当前基线验证准确率低于演示门槛，前端保留手动选择和地图模拟到点。正式验收仍需湛江现场照片、真实 TTS/RAG、路线 GPS 和部署证书。
+当前进度：接口 mock、协作规则、红树识别数据集清单和模型评估已完成。仓库登记了 147 张公开许可图片的来源，但图片本体在本地或共享存储中，不提交 GitHub；ResNet18 的 28 张分组验证准确率为 18/28（0.6429），低于 0.75 演示门槛，前端保留手动选择和地图模拟到点。评估与决策见 `docs/recognition-evaluation.md`。正式验收仍需湛江现场照片、真实 TTS/RAG、路线 GPS 和部署证书。
 
 ## 快速开始
 
@@ -48,4 +48,4 @@ python -m pip install -r backend/recognition/requirements-train.txt
 python backend/recognition/train_resnet18.py --root data/recognition --min-per-class 30
 ```
 
-训练图片目录被 `.gitignore` 忽略，脚本默认只校验来源清单和 SHA-256；从 GitHub 新 clone 后用 `--restore` 下载清单中的缺失图片。当前 centroid 基线准确率低于 0.75；ResNet18 的实际结果以新训练生成的 `metrics.json` 为准。未达标时服务继续使用手动选择兜底。
+训练图片目录被 `.gitignore` 忽略，脚本默认只校验来源清单和 SHA-256；从 GitHub 新 clone 后用 `--restore` 下载清单中的缺失图片。模型及 `metrics.json` 也是本地产物；当前结果未达标，服务继续使用手动选择兜底。

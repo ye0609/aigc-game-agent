@@ -102,7 +102,7 @@ def main():
     parser = argparse.ArgumentParser(description="训练红树识别基线")
     parser.add_argument("--root", type=Path, default=Path("data/recognition"))
     parser.add_argument("--catalog", type=Path, default=Path("data/species.catalog.json"))
-    parser.add_argument("--output", type=Path, default=Path("backend/recognition/artifacts/model.npz"))
+    parser.add_argument("--output", type=Path, default=Path("backend/recognition/artifacts/baseline.npz"))
     parser.add_argument("--groups", type=Path, help="image,group_id 清单；默认读取训练集目录下的 groups.csv")
     parser.add_argument("--min-per-class", type=int, default=30)
     args = parser.parse_args()
