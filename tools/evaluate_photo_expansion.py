@@ -101,12 +101,13 @@ def write_dataset(destination: Path, entries: list[tuple[Path, dict[str, str]]])
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--extra-root", type=Path, required=True)
+    parser.add_argument("--extra-root", type=Path, action="append", required=True)
     parser.add_argument("--base-root", type=Path, default=ROOT / "data" / "recognition")
     args = parser.parse_args()
-    base, extra = args.base_root.resolve(), args.extra_root.resolve()
-    old_rows, new_rows = read_sources(base), read_sources(extra)
-    for row in old_rows + new_rows:
+    base = args.base_root.resolve()
+    extras = [(root.resolve(), read_sources(root.resolve())) for root in args.extra_root]
+    old_rows = read_sources(base)
+    for row in old_rows + [row for _, rows in extras for row in rows]:
         if row["license"] not in ALLOWED_LICENSES:
             raise ValueError(f"unapproved license: {row['image']}")
     holdout = choose_holdout(old_rows)
@@ -119,7 +120,7 @@ def main() -> None:
         image_numbers[species_id] = max(image_numbers[species_id], int(Path(filename).stem.split("_")[-1]))
     extra_entries: list[tuple[Path, dict[str, str]]] = []
     rejection_counts = Counter()
-    for original in new_rows:
+    for extra, original in [(root, row) for root, rows in extras for row in rows]:
         row = dict(original)
         if row["sha256"] in old_hashes or row["observation_id"] in old_observations:
             rejection_counts["already in base"] += 1
@@ -140,6 +141,8 @@ def main() -> None:
         # The source filename differs from the merged filename.
         extra_entries.append((extra / original["image"], row))
         photographer_counts[group_id] += 1
+        old_hashes.add(row["sha256"])
+        old_observations.add(row["observation_id"])
 
     work = Path(tempfile.mkdtemp(prefix="aigc-recognition-eval-"))
     baseline_root, expanded_root = work / "baseline-data", work / "expanded-data"
