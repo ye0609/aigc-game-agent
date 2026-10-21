@@ -25,6 +25,16 @@
 
 ## 快速开始
 
+### 一键恢复本机演示（推荐）
+
+模型二进制不在 Git。准备好与 `models/recognition/manifest.json` 匹配的 `model.onnx` 后，一条命令完成依赖安装、模型 SHA-256 校验、启动和健康检查：
+
+```powershell
+python tools/setup_local_demo.py --model D:\models\model.onnx
+```
+
+模型缺失或哈希不符会直接退出 2，不会静默降级。完整步骤、日志位置和干净目录验证记录见 `docs/recognition-restore.md`。
+
 ### 启动接口
 
 识别服务会复用 mock 的问答、讲解、TTS 和上报路由；同一时间只启动这一个服务：

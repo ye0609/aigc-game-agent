@@ -29,3 +29,5 @@ jobs:
         run: python -m unittest test_recognition.py -v
       - name: Run training dataset manifest tests
         run: python -m unittest tools.test_collect_training_images -v
+      - name: Run one-command restore script tests
+        run: python -m unittest tools.test_setup_local_demo -v

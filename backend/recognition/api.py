@@ -189,10 +189,20 @@ def main():
     port = int(os.environ.get("PORT", "8000"))
     token = os.environ.get("API_TOKEN", "")
     validate_bind_security(host, token)
+    require_model = os.environ.get("REQUIRE_MODEL", "").strip().lower() in {"1", "true", "yes"}
+    ready = model_is_ready()
+    if require_model and not ready:
+        print(
+            "FATAL: REQUIRE_MODEL=1 but model.onnx/metrics.json are missing or failed hash/format validation. "
+            "Run python tools/setup_local_demo.py --model PATH_OR_URL first.",
+            file=sys.stderr,
+            flush=True,
+        )
+        raise SystemExit(2)
     server = ThreadingHTTPServer((host, port), RecognitionHandler)
     server.api_token = token
     print(f"识别联调服务已启动：http://{host}:{port}")
-    print(f"红树模型状态：{'已就绪' if model_is_ready() else '未就绪，使用手动选择兜底'}")
+    print(f"红树模型状态：{'已就绪' if ready else '未就绪，使用手动选择兜底'}")
     print("其他接口仍使用 mock 响应；按 Ctrl+C 停止")
     try:
         server.serve_forever()
