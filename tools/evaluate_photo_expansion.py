@@ -90,7 +90,12 @@ def write_dataset(destination: Path, entries: list[tuple[Path, dict[str, str]]])
         rows.append(row)
     rows.sort(key=lambda row: row["image"])
     with (destination / "sources.csv").open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+        fieldnames = list(rows[0].keys())
+        for row in rows[1:]:
+            for field in row:
+                if field not in fieldnames:
+                    fieldnames.append(field)
+        writer = csv.DictWriter(stream, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
     with (destination / "groups.csv").open("w", encoding="utf-8", newline="") as stream:

@@ -1,0 +1,56 @@
+{
+  "model": "resnet18-onnx-v1",
+  "pretrainedWeights": "ResNet18_Weights.IMAGENET1K_V1",
+  "classes": [
+    "mangrove-bruguiera-gymnorrhiza",
+    "mangrove-kandelia-obovata",
+    "mangrove-aegiceras-corniculatum",
+    "mangrove-avicennia-marina"
+  ],
+  "trainSamples": 238,
+  "validationSamples": 56,
+  "validationSplit": "fixed-original-photographers-plus-China-observation-sites",
+  "trainGroups": {
+    "mangrove-bruguiera-gymnorrhiza": 22,
+    "mangrove-kandelia-obovata": 19,
+    "mangrove-aegiceras-corniculatum": 18,
+    "mangrove-avicennia-marina": 21
+  },
+  "validationGroups": {
+    "mangrove-bruguiera-gymnorrhiza": 3,
+    "mangrove-kandelia-obovata": 4,
+    "mangrove-aegiceras-corniculatum": 3,
+    "mangrove-avicennia-marina": 7
+  },
+  "validationCorrect": 38,
+  "validationAccuracy": 0.6786,
+  "validationConfusion": {
+    "mangrove-bruguiera-gymnorrhiza": {
+      "mangrove-aegiceras-corniculatum": 1,
+      "mangrove-kandelia-obovata": 3,
+      "mangrove-bruguiera-gymnorrhiza": 2,
+      "mangrove-avicennia-marina": 1
+    },
+    "mangrove-kandelia-obovata": {
+      "mangrove-kandelia-obovata": 13,
+      "mangrove-avicennia-marina": 5,
+      "mangrove-bruguiera-gymnorrhiza": 1
+    },
+    "mangrove-aegiceras-corniculatum": {
+      "mangrove-aegiceras-corniculatum": 3,
+      "mangrove-avicennia-marina": 3,
+      "mangrove-kandelia-obovata": 1
+    },
+    "mangrove-avicennia-marina": {
+      "mangrove-kandelia-obovata": 3,
+      "mangrove-avicennia-marina": 20
+    }
+  },
+  "onnxMaxLogitDifference": 4.5e-06,
+  "seed": 20261018,
+  "groupsSha256": "cd23a041c50f1635c47f06aebfeeb6bb611fd8f1f99ff5aa20936f90a587216a",
+  "sourcesSha256": "772339a132805df74f65620bd0b248922329aa53c57cec33da4c50fd00086858",
+  "readyForDemo": false,
+  "modelSha256": "ebaa63b77bb077897ba8f2216e9d90bc95414654db16b9f9492f91f43cff5b87",
+  "validationWarning": "Some China holdout sites share photographers with training sites; no independent field validation"
+}

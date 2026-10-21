@@ -1,0 +1,18 @@
+{
+  "rawPhotos": 193,
+  "curatedPhotos": 147,
+  "excludedPhotos": 46,
+  "curatedGroups": 30,
+  "bySpecies": {
+    "Avicennia marina": 73,
+    "Kandelia obovata": 74
+  },
+  "byRegion": {
+    "Avicennia marina:taiwan-west-south": 52,
+    "Avicennia marina:taiwan-north": 9,
+    "Avicennia marina:kinmen": 5,
+    "Avicennia marina:taiwan-other": 7,
+    "Kandelia obovata:taiwan-north": 70,
+    "Kandelia obovata:kinmen": 4
+  }
+}

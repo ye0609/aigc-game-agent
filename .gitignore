@@ -35,3 +35,8 @@ data/recognition/*/
 data/recognition-expansion-20261020/*/
 data/recognition-expansion-20261020b/*/
 data/recognition-expansion-20261020b/*
+data/recognition-observation-inventory-20261021.json
+data/recognition-china-observation-inventory-20261021.json
+data/recognition-china-groups-20261021/*/
+data/recognition-china-curated-20261021/*/
+data/recognition-china-experiment-20261021/*.onnx
