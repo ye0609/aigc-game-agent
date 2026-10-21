@@ -1,0 +1,160 @@
+{
+  "date": "2026-10-21",
+  "architecture": "EfficientNet-B0",
+  "pretrainedWeights": "EfficientNet_B0_Weights.IMAGENET1K_V1",
+  "seed": 20261021,
+  "trainingImages": 238,
+  "developmentSplit": "grouped-by-photographer; no group overlap",
+  "developmentResults": [
+    {
+      "variant": "plain-head",
+      "weighted": false,
+      "finetuneLastBlock": false,
+      "trainSamples": 191,
+      "developmentSamples": 47,
+      "development": {
+        "correct": 20,
+        "total": 47,
+        "accuracy": 0.4255,
+        "confusion": {
+          "mangrove-aegiceras-corniculatum": {
+            "mangrove-bruguiera-gymnorrhiza": 1,
+            "mangrove-avicennia-marina": 2,
+            "mangrove-kandelia-obovata": 3
+          },
+          "mangrove-avicennia-marina": {
+            "mangrove-avicennia-marina": 11,
+            "mangrove-kandelia-obovata": 5,
+            "mangrove-bruguiera-gymnorrhiza": 1
+          },
+          "mangrove-bruguiera-gymnorrhiza": {
+            "mangrove-avicennia-marina": 3,
+            "mangrove-bruguiera-gymnorrhiza": 1,
+            "mangrove-kandelia-obovata": 2
+          },
+          "mangrove-kandelia-obovata": {
+            "mangrove-kandelia-obovata": 8,
+            "mangrove-avicennia-marina": 8,
+            "mangrove-bruguiera-gymnorrhiza": 2
+          }
+        }
+      }
+    },
+    {
+      "variant": "plain-last-block",
+      "weighted": false,
+      "finetuneLastBlock": true,
+      "trainSamples": 191,
+      "developmentSamples": 47,
+      "development": {
+        "correct": 30,
+        "total": 47,
+        "accuracy": 0.6383,
+        "confusion": {
+          "mangrove-aegiceras-corniculatum": {
+            "mangrove-aegiceras-corniculatum": 4,
+            "mangrove-avicennia-marina": 1,
+            "mangrove-kandelia-obovata": 1
+          },
+          "mangrove-avicennia-marina": {
+            "mangrove-avicennia-marina": 11,
+            "mangrove-bruguiera-gymnorrhiza": 1,
+            "mangrove-aegiceras-corniculatum": 4,
+            "mangrove-kandelia-obovata": 1
+          },
+          "mangrove-bruguiera-gymnorrhiza": {
+            "mangrove-bruguiera-gymnorrhiza": 4,
+            "mangrove-avicennia-marina": 1,
+            "mangrove-kandelia-obovata": 1
+          },
+          "mangrove-kandelia-obovata": {
+            "mangrove-kandelia-obovata": 11,
+            "mangrove-bruguiera-gymnorrhiza": 2,
+            "mangrove-avicennia-marina": 5
+          }
+        }
+      }
+    },
+    {
+      "variant": "weighted-last-block",
+      "weighted": true,
+      "finetuneLastBlock": true,
+      "trainSamples": 191,
+      "developmentSamples": 47,
+      "development": {
+        "correct": 26,
+        "total": 47,
+        "accuracy": 0.5532,
+        "confusion": {
+          "mangrove-aegiceras-corniculatum": {
+            "mangrove-aegiceras-corniculatum": 5,
+            "mangrove-kandelia-obovata": 1
+          },
+          "mangrove-avicennia-marina": {
+            "mangrove-aegiceras-corniculatum": 7,
+            "mangrove-avicennia-marina": 7,
+            "mangrove-bruguiera-gymnorrhiza": 2,
+            "mangrove-kandelia-obovata": 1
+          },
+          "mangrove-bruguiera-gymnorrhiza": {
+            "mangrove-bruguiera-gymnorrhiza": 4,
+            "mangrove-avicennia-marina": 1,
+            "mangrove-kandelia-obovata": 1
+          },
+          "mangrove-kandelia-obovata": {
+            "mangrove-kandelia-obovata": 10,
+            "mangrove-bruguiera-gymnorrhiza": 2,
+            "mangrove-aegiceras-corniculatum": 1,
+            "mangrove-avicennia-marina": 5
+          }
+        }
+      }
+    }
+  ],
+  "selected": "plain-last-block",
+  "fixedHoldoutResult": {
+    "correct": 41,
+    "total": 56,
+    "accuracy": 0.7321,
+    "confusion": {
+      "mangrove-aegiceras-corniculatum": {
+        "mangrove-avicennia-marina": 5,
+        "mangrove-aegiceras-corniculatum": 2
+      },
+      "mangrove-avicennia-marina": {
+        "mangrove-kandelia-obovata": 3,
+        "mangrove-avicennia-marina": 20
+      },
+      "mangrove-bruguiera-gymnorrhiza": {
+        "mangrove-kandelia-obovata": 1,
+        "mangrove-avicennia-marina": 3,
+        "mangrove-bruguiera-gymnorrhiza": 3
+      },
+      "mangrove-kandelia-obovata": {
+        "mangrove-kandelia-obovata": 16,
+        "mangrove-avicennia-marina": 3
+      }
+    }
+  },
+  "onnxMaxLogitDifference": 1.431e-05,
+  "modelBytes": 16040683,
+  "modelSha256": "1a4c945a9b7973aa2bf849efe71153ef5feeb2b4e4b0ad0d3882f8f0c4bfa366",
+  "cpuBenchmarkEfficientNet": {
+    "images": 56,
+    "repeats": 3,
+    "meanMsPerImage": 12.74,
+    "p95RepeatMeanMsPerImage": 13.09,
+    "note": "CPU ONNX inference only; excludes upload, preprocessing outside Python, and network latency."
+  },
+  "fixedResNetModelExists": true,
+  "readyForDemo": false,
+  "warning": "The 56-image holdout was already used in prior model experiments; this is exploratory, not independent Zhanjiang field validation.",
+  "cpuBenchmarkResNet18": {
+    "images": 56,
+    "repeats": 3,
+    "meanMsPerImage": 15.89,
+    "p95RepeatMeanMsPerImage": 16.0,
+    "note": "CPU ONNX inference only; excludes upload, preprocessing outside Python, and network latency."
+  },
+  "resnet18ModelBytes": 44704752
+}
