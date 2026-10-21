@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "resnet18-expanded-onnx-v1",
+  "artifact": "model.onnx",
+  "sha256": "f01103b2ef2f4bb70c4ecce198c2849415a064de8c607c102c107631a7a070b9",
+  "bytes": 44704752,
+  "downloadUrl": null,
+  "report": "data/recognition-balance-20261021/expanded-resnet18-metrics.json",
+  "validationScope": "local-demo-only",
+  "fieldValidated": false,
+  "classes": [
+    "mangrove-aegiceras-corniculatum",
+    "mangrove-avicennia-marina",
+    "mangrove-bruguiera-gymnorrhiza",
+    "mangrove-kandelia-obovata"
+  ],
+  "note": "Model binary is not in Git. Pass --model PATH_OR_URL or set downloadUrl to a trusted HTTPS URL. The expected SHA-256 and size come from data/recognition-balance-20261021/expanded-resnet18-metrics.json."
+}

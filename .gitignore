@@ -10,6 +10,7 @@ node_modules/
 dist/
 build/
 .venv/
+.local-demo/
 __pycache__/
 *.py[cod]
 
