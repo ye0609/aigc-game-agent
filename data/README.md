@@ -40,7 +40,7 @@ python data/test_species_data.py -v
 - `texing`：特呈岛红树林
 - `jinniu`：金牛岛红树林
 
-坐标统一使用 **WGS-84**；高德/腾讯地图接入前由 A 转成 GCJ-02。站点中心已按公开地图核实，`route` 和 `birdWatchingShelters` 目前为空，因为公开资料没有栈道拐点和观鸟屋的精确坐标；现场 GPS 采集后填入，并删除 `description` 里的“待现场 GPS 校准”。来源和采集清单见 `docs/sites.sources.md`。
+坐标统一使用 **WGS-84**。三个站点的中心、栈道点和观鸟点由 C 提供，属于参考坐标，尚未现场实测；`route` 和 `birdWatchingShelters` 已填入，但导航前仍需现场校准。A 使用高德/腾讯地图时，在运行时转成 GCJ-02，不要改仓库里的 WGS-84 基准。来源和校准清单见 `docs/sites.sources.md`。
 
 改地点数据后运行：
 
