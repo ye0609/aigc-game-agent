@@ -10,7 +10,7 @@ import numpy as np
 
 from classifier import CentroidClassifier, FEATURE_SIZE, Image, file_sha256, image_feature
 from dataset import load_catalog, validate_dataset
-from api import load_ready_model, model_is_ready, recognize
+from api import load_ready_model, model_health, model_is_ready, recognize
 from train import split_by_group, train
 
 
@@ -159,6 +159,20 @@ class DatasetTest(unittest.TestCase):
                 metrics["validationSplit"] = "unknown-split"
                 metrics_path.write_text(json.dumps(metrics), encoding="utf-8")
                 self.assertFalse(model_is_ready(output))
+
+    def test_model_health_marks_ready_model_as_local_demo_only(self):
+        with patch("api.load_ready_model", return_value=(SimpleNamespace(labels=[]), [])):
+            health = model_health()
+        self.assertEqual(health["mangroveModelReady"], True)
+        self.assertEqual(health["mangroveValidationScope"], "local-demo-only")
+        self.assertEqual(health["mangroveFieldValidated"], False)
+
+    def test_model_health_reports_unavailable_without_model(self):
+        with patch("api.load_ready_model", side_effect=ValueError("missing model")):
+            health = model_health()
+        self.assertEqual(health["mangroveModelReady"], False)
+        self.assertEqual(health["mangroveValidationScope"], "unavailable")
+        self.assertEqual(health["mangroveFieldValidated"], False)
 
     def test_classifier_predicts_nearest_class(self):
         features = np.vstack([np.zeros(FEATURE_SIZE), np.ones(FEATURE_SIZE)]).astype(np.float32)

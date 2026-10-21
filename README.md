@@ -43,7 +43,7 @@ python tools/setup_local_demo.py --model D:\models\model.onnx
 python backend/recognition/api.py
 ```
 
-健康检查：`http://127.0.0.1:8000/api/health`。本机安装扩充模型后应返回 `mangroveModelReady: true`；模型缺失或校验失败时返回 false，拍照识别使用手动选择兜底。
+健康检查：`http://127.0.0.1:8000/api/health`。本机安装扩充模型后应返回 `mangroveModelReady: true`，同时返回 `mangroveValidationScope: "local-demo-only"` 和 `mangroveFieldValidated: false`；模型缺失或校验失败时返回 false，拍照识别使用手动选择兜底。
 
 ### 打开前端
 

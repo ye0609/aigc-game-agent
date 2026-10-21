@@ -32,7 +32,7 @@
 
 29 张、5 位摄影者仍是很小的线上照片开发集，96.55% 不能解释成真实场景准确率，也不能与之前的 56 张留出结果直接横比。它说明新增许可照片让候选模型在当前作者隔离样本上表现很好。
 
-用户决定直接用于本地演示。候选 ONNX 已复制到本机 `backend/recognition/artifacts/model.onnx`，配套部署指标启用 `readyForDemo: true`；服务因此开启四类红树自动识别，低置信度与鸟类识别仍进入手动选择 fallback。此决定仅表示本机演示启用，不等于湛江现场验收。照片和模型都被 Git 忽略，其他机器需按下述步骤恢复数据、重训和激活。上线前仍需用湛江现场、按地点和树个体隔离的新照片盲测，并实测端到端延迟。
+用户决定直接用于本地演示。候选 ONNX 已复制到本机 `backend/recognition/artifacts/model.onnx`，配套部署指标启用 `readyForDemo: true`；服务因此开启四类红树自动识别，低置信度与鸟类识别仍进入手动选择 fallback。`GET /api/health` 在就绪时同时返回 `mangroveValidationScope: "local-demo-only"` 和 `mangroveFieldValidated: false`，避免把本地演示误读成现场验收。此决定仅表示本机演示启用，不等于湛江现场验收。照片和模型都被 Git 忽略，其他机器需按下述步骤恢复数据、重训和激活。上线前仍需用湛江现场、按地点和树个体隔离的新照片盲测，并实测端到端延迟。
 
 运行命令：
 
@@ -51,4 +51,4 @@
 .\.venv\Scripts\python.exe tools\collect_balance_photos.py --restore
 ```
 
-候选模型和原始实验指标保存在本地 `data/recognition-balance-20261021/`。部署指标单独保存在被 Git 忽略的 `backend/recognition/artifacts/metrics.json`，标明这是用户批准的本地演示启用；原始实验指标的 `readyForDemo` 保持 false。后端仍以部署指标、模型 SHA-256、物种目录一致性决定是否加载，fallback 保留。
+候选模型和原始实验指标保存在本地 `data/recognition-balance-20261021/`。部署指标单独保存在被 Git 忽略的 `backend/recognition/artifacts/metrics.json`，标明这是用户批准的本地演示启用；原始实验指标的 `readyForDemo` 保持 false。后端仍以部署指标、模型 SHA-256、物种目录一致性决定是否加载，fallback 保留。健康检查的就绪状态现在附带 `mangroveValidationScope` 与 `mangroveFieldValidated`，前者为 `local-demo-only` 时不得对外宣称现场可用。
