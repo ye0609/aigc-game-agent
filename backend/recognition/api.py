@@ -159,6 +159,25 @@ def recognize(fields: dict, model_path: Path = MODEL_PATH) -> tuple[int, dict]:
     })
 
 
+def model_health() -> dict:
+    """Return readiness plus the validation scope of the currently installed model."""
+    try:
+        load_ready_model()
+    except (OSError, ValueError, RuntimeError):
+        return {
+            "mangroveModelReady": False,
+            "mangroveValidationScope": "unavailable",
+            "mangroveFieldValidated": False,
+        }
+    # The only model currently installable is the expanded local-demo candidate.
+    # It has an online-photo development result, not Zhanjiang field validation.
+    return {
+        "mangroveModelReady": True,
+        "mangroveValidationScope": "local-demo-only",
+        "mangroveFieldValidated": False,
+    }
+
+
 class RecognitionHandler(MockHandler):
     server_version = "MangroveRecognition/1.0"
 
@@ -170,7 +189,7 @@ class RecognitionHandler(MockHandler):
             status, payload = response({
                 "service": "hybrid",
                 "status": "ok",
-                "mangroveModelReady": model_is_ready(),
+                **model_health(),
                 "birdModelReady": False,
                 "otherEndpoints": "mock",
             })
