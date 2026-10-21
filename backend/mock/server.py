@@ -11,10 +11,12 @@ import ipaddress
 import json
 import math
 import os
+import re
 import uuid
 from email.parser import BytesParser
 from email.policy import default
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from urllib.parse import urlparse
 
 
@@ -22,6 +24,100 @@ HOST = "127.0.0.1"
 PORT = 8000
 MAX_REQUEST_BYTES = 15 * 1024 * 1024
 MAX_TTS_TEXT_LENGTH = 2000
+KNOWLEDGE_DIR = Path(__file__).resolve().parents[2] / "knowledge"
+QUESTION_STOPWORDS = {"什么", "为什么", "怎么", "如何", "可以", "哪些", "是否", "一个", "这个", "那个", "红树"}
+CJK_RE = re.compile(r"[\u4e00-\u9fff]+")
+ALNUM_RE = re.compile(r"[a-zA-Z0-9]{2,}")
+
+
+def _load_knowledge_chunks() -> list[dict]:
+    chunks = []
+    if not KNOWLEDGE_DIR.is_dir():
+        return chunks
+    for path in sorted(KNOWLEDGE_DIR.glob("*.md")):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for block in re.split(r"\n\s*\n", text):
+            block = " ".join(block.split())
+            if len(block) < 24:
+                continue
+            chunks.append({"text": block, "source": f"knowledge/{path.name}"})
+    return chunks
+
+
+KNOWLEDGE_CHUNKS = _load_knowledge_chunks()
+
+
+def _tokens(text: str) -> list[str]:
+    text = text.lower()
+    tokens = []
+    for run in CJK_RE.findall(text):
+        for size in (2, 3):
+            for index in range(len(run) - size + 1):
+                token = run[index:index + size]
+                if token not in QUESTION_STOPWORDS:
+                    tokens.append(token)
+    tokens.extend(ALNUM_RE.findall(text))
+    return tokens
+
+
+def _score_question(question: str, text: str) -> float:
+    question_tokens = set(_tokens(question))
+    if not question_tokens:
+        return 0.0
+    text_tokens = _tokens(text)
+    counts = {}
+    for token in text_tokens:
+        counts[token] = counts.get(token, 0) + 1
+    score = sum(counts.get(token, 0) for token in question_tokens)
+    return score / math.sqrt(max(len(text_tokens), 1))
+
+
+def answer_question(question: str) -> dict:
+    q = question.strip()
+    if not q:
+        return {"answer": "请先输入一个关于红树林、蓝碳或观鸟的问题。", "sources": []}
+    if ("红树" in q) and any(word in q for word in ("几种", "多少种", "种类", "哪些")):
+        return {
+            "answer": "本项目重点收录 4 种红树：木榄、秋茄、桐花树、白骨壤。它们是湛江研学中最常见的代表种，但不是湛江红树林的全部；实际种类以保护区官方名录为准。",
+            "sources": ["knowledge/mangrove-species.md"],
+        }
+    if any(word in q for word in ("防风", "风浪", "护岸", "海岸防护", "消浪")):
+        return {
+            "answer": "红树林的支柱根、呼吸根和密集茎干会增加水流阻力，削弱波浪能量；根系同时固定泥沙、减少岸滩侵蚀。它是天然海岸屏障，但不能替代海堤等工程设施，台风和大潮期间仍要遵守保护区安全规定。",
+            "sources": ["knowledge/ecosystem.md"],
+        }
+    if any(word in q for word in ("蓝碳", "固碳", "碳汇", "碳库", "碳储量")):
+        return {
+            "answer": "蓝碳是由红树林、盐沼和海草床等海岸带生态系统固定的碳。红树林把碳储存在生物量和沉积物中，单位面积碳储量通常较高，但具体比例随地点、潮位和人类活动变化，不能用一个数字代表所有红树林。",
+            "sources": ["knowledge/blue-carbon.md"],
+        }
+    if any(word in q for word in ("黑脸琵鹭", "白鹭", "勺嘴鹬", "观鸟", "鸟类")):
+        return {
+            "answer": "湛江红树林可见白鹭、黑脸琵鹭、勺嘴鹬等候鸟。黑脸琵鹭是国家一级保护野生动物；勺嘴鹬极度濒危。观鸟时保持距离，不投喂、不驱赶、不播放鸟鸣引诱，具体保护等级以官方名录为准。",
+            "sources": ["knowledge/birds.md"],
+        }
+    if any(word in q for word in ("路线", "怎么去", "地图", "点位", "观鸟屋", "导航")):
+        return {
+            "answer": "项目包含高桥、特呈岛、金牛岛三个点位，仓库里的路线和观鸟屋是 WGS-84 参考坐标，尚未逐点实测。前端地图是示意底图，导航前要用手机 GPS 校准，并听从保护区向导安排。",
+            "sources": ["knowledge/visiting.md"],
+        }
+    if any(word in q for word in ("安全", "注意", "礼仪", "潮汐", "泥滩")):
+        return {
+            "answer": "红树林研学要关注潮汐：退潮可观察呼吸根和底栖生物，但泥滩湿滑，不要单独进入；涨潮时不要停留在低滩。不采摘、不捕捉、不投喂，垃圾带走，台风或雷雨天气不要下滩。",
+            "sources": ["knowledge/visiting.md"],
+        }
+    scored = sorted(
+        ((_score_question(q, chunk["text"]), chunk) for chunk in KNOWLEDGE_CHUNKS),
+        key=lambda item: item[0],
+        reverse=True,
+    )
+    if not scored or scored[0][0] < 1.0:
+        return {"answer": "当前知识库没有收录这个问题的可靠资料。可以换一种问法，或询问红树物种、生态功能、蓝碳、鸟类和研学点位。", "sources": []}
+    best = scored[0][1]["text"].lstrip("# ").strip()
+    return {"answer": best, "sources": [scored[0][1]["source"]]}
 
 
 class RequestTooLargeError(Exception):
@@ -275,10 +371,7 @@ class MockHandler(BaseHTTPRequestHandler):
             question = str(fields.get("question", "")).strip()
             if not question:
                 return error("question 为必填项")
-            answer = "红树林的根系能够固定泥沙，并削弱风浪能量，还为许多生物提供栖息地。"
-            if "蓝碳" in question:
-                answer = "红树林通过生物量和沉积物长期储存碳，是重要的蓝碳生态系统。"
-            return response({"answer": answer, "sources": ["knowledge/mangrove-coast.md"]})
+            return response(answer_question(question))
 
         if path == "/api/knowledge/explain":
             species_id = str(fields.get("speciesId", "")).strip()

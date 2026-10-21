@@ -47,6 +47,28 @@ class ContractSmokeTest(unittest.TestCase):
                 self.assertTrue(result["success"])
                 self.assertIsNone(result["error"])
 
+    def test_knowledge_answers_follow_the_question(self):
+        handler = object.__new__(MockHandler)
+        cases = [
+            ("红树有几种", "4 种", "knowledge/mangrove-species.md"),
+            ("为什么红树林能防风浪", "波浪", "knowledge/ecosystem.md"),
+            ("蓝碳是什么", "蓝碳", "knowledge/blue-carbon.md"),
+            ("黑脸琵鹭是什么", "黑脸琵鹭", "knowledge/birds.md"),
+        ]
+        for question, expected, source in cases:
+            with self.subTest(question=question):
+                status, result = handler.route("/api/knowledge/ask", {"question": question})
+                self.assertEqual(status, 200)
+                self.assertIn(expected, result["data"]["answer"])
+                self.assertIn(source, result["data"]["sources"])
+
+    def test_knowledge_does_not_invent_an_answer_for_unknown_questions(self):
+        handler = object.__new__(MockHandler)
+        status, result = handler.route("/api/knowledge/ask", {"question": "今天天气怎么样"})
+        self.assertEqual(status, 200)
+        self.assertIn("没有收录", result["data"]["answer"])
+        self.assertEqual(result["data"]["sources"], [])
+
     def test_invalid_recognition_request_returns_contract_error(self):
         handler = object.__new__(MockHandler)
         status, result = handler.route("/api/recognition/species", {"mode": "mangrove"})

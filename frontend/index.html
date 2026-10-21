@@ -159,6 +159,17 @@ ul,ol{list-style:none}
 .map-route-dot{stroke:#fff;stroke-width:2}
 .map-shelter{stroke:#fff;stroke-width:2;cursor:help}
 .map-route-label{font-size:9px;font-weight:700;fill:#14382B;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.map-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:2px 2px 10px}
+.map-actions .btn{min-height:36px;padding:0 13px;font-size:12.5px}
+#gpsStatus{font-size:11.5px;color:var(--ink-2);line-height:1.5;flex:1;min-width:150px}
+.route-summary{display:grid;gap:8px;margin:4px 0 12px}
+.route-summary-card{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:10px 12px;box-shadow:var(--shadow)}
+.route-summary-card.active{border-color:var(--pine);background:rgba(47,107,79,.07)}
+.route-summary-card .dot{flex:none;width:8px;height:8px;border-radius:50%}
+.route-summary-card b{font-size:13px;display:block}
+.route-summary-card small{display:block;font-size:11px;color:var(--ink-2);margin-top:1px}
+.route-summary-card .km{margin-left:auto;flex:none;text-align:right;font-size:12px;font-weight:800;color:var(--pine)}
+.route-summary-card .km span{display:block;font-size:10.5px;font-weight:500;color:var(--ink-2)}
 .site-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:var(--r);padding:13px;box-shadow:var(--shadow);margin-bottom:11px;border:1px solid rgba(228,219,200,.5);cursor:pointer;min-width:0}
 .site-card .pin{flex:none;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
 .site-card .pin svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -595,13 +606,18 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
         <span><i style="background:#A9CD8F"></i>红树林带</span>
       </div>
     </div>
+    <div class="map-actions">
+      <button class="btn btn-ghost btn-sm" id="gpsBtn">定位我，算直线距离</button>
+      <span id="gpsStatus">未定位 · 点击后使用手机 GPS</span>
+    </div>
+    <div class="route-summary" id="routeSummary"></div>
 
     <div class="section-title">核心点位</div>
     <div id="siteList"></div>
 
     <div class="card" id="siteDetail" style="display:none;margin-top:12px"></div>
 
-    <div class="demo-note">当前只展示站点中心和演示点位，不提供实地导航。现场采集路线后，由部署层配置高德 / 腾讯 SDK，页面代码和仓库中不保存 key。</div>
+    <div class="demo-note">路线和观鸟屋是 WGS-84 参考坐标，尚未逐点实测；地图为示意底图。高德导航按钮已在运行时做 GCJ-02 转换，现场仍需用 GPS 校准并听从向导安排。</div>
   </section>
 
   <!-- ===== 视图：时间轴复原 ===== -->
@@ -1310,11 +1326,16 @@ function renderSiteRoutes(){
     var title=svgNode('title');title.textContent=s.name+' 参考路线（WGS-84，导航前校准）';line.appendChild(title);
     group.appendChild(line);
     points.forEach(function(point,index){
-      if(index!==0&&index!==points.length-1)return;
+      var isStart=index===0,isEnd=index===points.length-1;
       group.appendChild(svgNode('circle',{
-        cx:point[0].toFixed(1),cy:point[1].toFixed(1),r:index===0?3.4:3,
-        fill:index===0?'#fff':color,stroke:color,class:'map-route-dot','data-site':s.id
+        cx:point[0].toFixed(1),cy:point[1].toFixed(1),r:isStart||isEnd?3.4:2.1,
+        fill:isStart?'#fff':color,stroke:color,class:'map-route-dot','data-site':s.id
       }));
+      if(isStart||isEnd){
+        var label=svgNode('text',{x:(point[0]+4).toFixed(1),y:(point[1]-4).toFixed(1),class:'map-route-label'});
+        label.textContent=isStart?'起':'终';
+        group.appendChild(label);
+      }
     });
     (s.shelters||[]).forEach(function(shelter){
       var x=pin[0]+(shelter.longitude-center[0])*scale;
@@ -1326,17 +1347,76 @@ function renderSiteRoutes(){
     });
   });
 }
+var selectedSiteId=null;
+var SITE_DISTANCE={};
 function highlightRoute(id){
+  selectedSiteId=id;
   $$('.map-route').forEach(function(line){line.classList.toggle('active',line.getAttribute('data-site')===id)});
+  renderRouteSummary();
+}
+function haversineKm(lat1,lon1,lat2,lon2){
+  var rad=Math.PI/180;
+  var dLat=(lat2-lat1)*rad,dLon=(lon2-lon1)*rad;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 6371.0088*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function formatKm(km){
+  if(!isFinite(km))return '—';
+  return km<1?Math.round(km*1000)+' m':km.toFixed(1)+' km';
+}
+function routeLengthKm(route){
+  var total=0;
+  for(var i=1;i<(route||[]).length;i++){
+    var a=route[i-1],b=route[i];
+    if(!a||!b)continue;
+    total+=haversineKm(a.latitude,a.longitude,b.latitude,b.longitude);
+  }
+  return total;
+}
+function renderRouteSummary(){
+  var box=$('#routeSummary');if(!box)return;
+  box.innerHTML=SITES.map(function(s){
+    var route=s.route||[],shelters=s.shelters||[];
+    var km=routeLengthKm(route);
+    var active=selectedSiteId===s.id?' active':'';
+    return '<button class="route-summary-card'+active+'" data-summary="'+s.id+'">'+
+      '<span class="dot" style="background:'+(SITE_ROUTE_COLORS[s.id]||'#C47A4A')+'"></span>'+
+      '<span style="flex:1;min-width:0"><b>'+esc(s.name)+'</b><small>'+route.length+' 个参考点 · '+shelters.length+' 个观鸟点</small></span>'+
+      '<span class="km">'+formatKm(km)+'<span>参考长度</span></span></button>';
+  }).join('');
+}
+function locateMe(){
+  var status=$('#gpsStatus'),button=$('#gpsBtn');
+  if(!navigator.geolocation){if(status)status.textContent='浏览器不支持定位，请用手机 HTTPS 打开';return}
+  if(status)status.textContent='正在定位…';
+  if(button)button.disabled=true;
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    var nearest=null,nearestKm=Infinity;
+    SITES.forEach(function(s){
+      var center=SITE_LL[s.id];if(!center)return;
+      var km=haversineKm(lat,lon,center[1],center[0]);
+      SITE_DISTANCE[s.id]=km;
+      if(km<nearestKm){nearestKm=km;nearest=s}
+    });
+    if(button)button.disabled=false;
+    if(status)status.textContent='已定位 · 最近：'+(nearest?nearest.name+' '+formatKm(nearestKm):'—')+'（直线距离）';
+    renderMap();
+    if(selectedSiteId)highlightRoute(selectedSiteId);
+  },function(err){
+    if(button)button.disabled=false;
+    if(status)status.textContent='定位失败：'+(err&&err.message?err.message:'请检查 HTTPS 和定位权限');
+  },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 }
 function renderMap(){
   $('#siteList').innerHTML=SITES.map(function(s){
     return '<div class="site-card" data-site="'+s.id+'">'+
       '<div class="pin" style="background:'+s.color+'"><svg viewBox="0 0 24 24"><path d="M12 21s-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></div>'+
       '<div style="flex:1;min-width:0"><h4>'+esc(s.name)+'</h4><p>'+esc(s.area)+'</p></div>'+
-      '<div class="dist">'+esc(s.dist)+'</div></div>';
+      '<div class="dist">'+(SITE_DISTANCE[s.id]!=null?'距你 '+formatKm(SITE_DISTANCE[s.id]):esc(s.dist))+'</div></div>';
   }).join('');
   renderSiteRoutes();
+  renderRouteSummary();
 }
 function showSite(id){
   var s=SITES.filter(function(x){return x.id===id})[0];if(!s)return;
@@ -1354,10 +1434,18 @@ function showSite(id){
   var routeBtn=route.length
     ?'<button class="btn btn-ghost btn-sm" data-route="'+s.id+'">查看路线</button>'
     :'<button class="btn btn-ghost btn-sm" disabled>路线待校准</button>';
+  var routeInfo='';
+  if(route.length){
+    var start=route[0],end=route[route.length-1],routeKm=routeLengthKm(route);
+    routeInfo='<div class="info-row"><b>参考路线</b><span>约 '+formatKm(routeKm)+' · '+route.length+' 个点</span></div>'+
+      '<div class="info-row"><b>起终点</b><span>'+start.latitude.toFixed(5)+','+start.longitude.toFixed(5)+' → '+end.latitude.toFixed(5)+','+end.longitude.toFixed(5)+'</span></div>';
+  }
+  var distanceRow=SITE_DISTANCE[s.id]!=null?'<div class="info-row"><b>距你</b><span>'+formatKm(SITE_DISTANCE[s.id])+'（直线）</span></div>':'';
   $('#siteDetail').innerHTML=
     '<h4 style="font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:'+s.color+'"></span>'+esc(s.name)+'</h4>'+
     '<p style="font-size:13px;color:var(--ink-2);margin:8px 0;line-height:1.8">'+esc(s.desc)+'</p>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">'+chips.map(function(p){return '<span class="chip chip-sea">'+esc(p)+'</span>'}).join('')+'</div>'+
+    routeInfo+distanceRow+
     '<div class="info-row"><b>坐标</b><span>'+esc(s.coords)+'（WGS-84）</span></div>'+
     '<div class="info-row"><b>数据状态</b><span>参考坐标，尚未现场实测；导航前请用手机 GPS 校准</span></div>'+
     '<div class="info-row"><b>GPS 触发</b><span>到点自动弹讲解卡片</span></div>'+
@@ -1775,6 +1863,12 @@ function bindEvents(){
     go('species-from/guide/'+c.getAttribute('data-sp'));
   });
   $('#resetGuideBtn').onclick=function(){if(confirm('确定清空图鉴收集记录？')){STATE.collected={};saveState();renderGuide();toast('图鉴已重置')}};
+  $('#gpsBtn').onclick=locateMe;
+  $('#routeSummary').addEventListener('click',function(e){
+    var c=e.target.closest('[data-summary]');if(!c)return;
+    showSite(c.getAttribute('data-summary'));
+    $('#mapSvg').scrollIntoView({behavior:'smooth',block:'center'});
+  });
   $('#siteList').addEventListener('click',function(e){
     var c=e.target.closest('.site-card');if(!c)return;
     showSite(c.getAttribute('data-site'));
