@@ -42,3 +42,8 @@ data/recognition-china-curated-20261021/*/
 data/recognition-china-experiment-20261021/*.onnx
 data/recognition-tuning-20261021/*.onnx
 data/recognition-efficientnet-b0-20261021/*.onnx
+
+# Locally downloaded licensed training photos and generated contact sheets
+data/recognition-balance-20261021/*/
+data/recognition-balance-20261021/contact*.jpg
+data/recognition-balance-20261021/*.onnx

@@ -34,7 +34,7 @@
 
 4. Caddy 的 `tls internal` 使用本地 CA。电脑和测试手机都必须信任该 CA 证书，且手机访问的 IP 必须与 `DEMO_HOST` 一致；仅打开一个不受信任证书的页面不足以完成相机/GPS 真机测试。先用电脑访问 `https://<DEMO_HOST>/api/health`，再用手机访问相同地址并允许相机、定位权限。
 
-5. 检查 `/api/health`：`mangroveModelReady: false` 表示训练模型尚未就绪，此时拍照应进入手动选物种流程。断开代理或直接请求 `http://127.0.0.1:8000/api/health`（不带 token）应得到 401。前端和代理同域，不需要浏览器发送 `Authorization`。
+5. 检查 `/api/health`：`mangroveModelReady: true` 表示本机已装入用户批准的红树演示模型；false 表示模型尚未就绪，此时拍照应进入手动选物种流程。断开代理或直接请求 `http://127.0.0.1:8000/api/health`（不带 token）应得到 401。前端和代理同域，不需要浏览器发送 `Authorization`。
 
 局域网 IP 更换时，更新 `DEMO_HOST` 并重新签发/信任对应证书。训练图片和模型尚未到位时，不要把 mock 返回或手动选择称为真实识别准确率。
 
@@ -44,6 +44,6 @@
 
 ## 当前接口限制
 
-- `backend/recognition/api.py` 仅在四类红树 ONNX 模型及指标都达标时启用自动识别；模型不存在或未达标时返回 `fallbackRequired: true`。鸟类识别还没有真实模型。
+- `backend/recognition/api.py` 仅在四类红树 ONNX 模型与对应部署指标校验通过时启用自动识别；模型不存在或未达演示门槛时返回 `fallbackRequired: true`。当前扩充模型获准用于本地演示，开发集结果并非湛江现场验收。鸟类识别还没有真实模型。
 - 问答、讲解、TTS 和上报目前仍复用 mock；TTS 返回 `audioUrl: null` 和 `fallbackRequired: true`，由浏览器语音兜底；上报没有持久化。它们可以用于接口联调，不能作为正式服务验收。
 - `POST /api/reports` 要求有效经纬度。GPS 获取失败时，前端应请求重试或提供人工选点，不能提交缺失坐标或 `0,0`。

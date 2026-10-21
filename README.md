@@ -21,7 +21,7 @@
 
 ## 当前状态
 
-当前进度：接口 mock、协作规则、红树识别数据集清单和模型评估已完成。仓库登记了 147 张公开许可图片的来源，但图片本体在本地或共享存储中，不提交 GitHub；ResNet18 的 28 张分组验证准确率为 18/28（0.6429），低于 0.75 演示门槛，前端保留手动选择和地图模拟到点。评估与决策见 `docs/recognition-evaluation.md`。正式验收仍需湛江现场照片、真实 TTS/RAG、路线 GPS 和部署证书。
+当前进度：接口 mock、H5 页面和四类红树识别已具备本地演示能力。新增的许可照片扩充实验使用 485 张训练图，在 29 张按摄影者隔离的网络照片开发集上答对 28 张（96.55%）。用户已决定在本机演示中启用这个 ResNet18 候选；低置信度仍走手动选择 fallback。模型与部署指标保存在本地 `backend/recognition/artifacts/`，不随 Git 提交。该结果不是湛江现场准确率；正式验收仍需当地新地点/新个体照片、真实 TTS/RAG、路线 GPS 和部署证书。实验及复现见 `docs/recognition-open-photo-expansion-20261021.md`。
 
 ## 快速开始
 
@@ -33,11 +33,11 @@
 python backend/recognition/api.py
 ```
 
-健康检查：`http://127.0.0.1:8000/api/health`。没有达到 `readyForDemo` 的模型时，健康检查会明确返回 `mangroveModelReady: false`，拍照识别应使用手动选择兜底。
+健康检查：`http://127.0.0.1:8000/api/health`。本机安装扩充模型后应返回 `mangroveModelReady: true`；模型缺失或校验失败时返回 false，拍照识别使用手动选择兜底。
 
 ### 打开前端
 
-本机可以直接打开 `frontend/index.html`，此时页面把接口请求发到 `http://127.0.0.1:8000/api`。相机、定位和手机联调请按 `docs/deployment.md` 使用 HTTPS 同域反向代理；不要把后端 8000 端口直接暴露给手机或公网。
+在第二个终端运行 `python tools/serve_local_demo.py`，然后打开 `http://127.0.0.1:5173/`。本地服务器将页面、结构化数据和 `/api` 放在同一来源，并且只绑定回环地址。相机、定位和手机联调请按 `docs/deployment.md` 使用 HTTPS 同域反向代理；不要把后端 8000 端口直接暴露给手机或公网。
 
 ### 检查当前数据和代码
 
@@ -45,7 +45,8 @@ python backend/recognition/api.py
 python tools/collect_training_images.py --restore
 python backend/recognition/dataset.py --root data/recognition --min-per-class 30
 python -m pip install -r backend/recognition/requirements-train.txt
-python backend/recognition/train_resnet18.py --root data/recognition --min-per-class 30
+python tools/train_expanded_resnet18.py
+python tools/activate_expanded_model.py --local-demo
 ```
 
-训练图片目录被 `.gitignore` 忽略，脚本默认只校验来源清单和 SHA-256；从 GitHub 新 clone 后用 `--restore` 下载清单中的缺失图片。模型及 `metrics.json` 也是本地产物；当前结果未达标，服务继续使用手动选择兜底。
+训练图片目录被 `.gitignore` 忽略；从 GitHub 新 clone 后按 `docs/recognition-open-photo-expansion-20261021.md` 的命令恢复三批图片、重训并运行 `tools/activate_expanded_model.py --local-demo`。模型及部署 `metrics.json` 也是本地产物。缺失时服务自动回到手动选择兜底。

@@ -1,6 +1,6 @@
 # 红树识别
 
-当前默认服务检查 ResNet18 导出的 ONNX 模型；原有颜色/空间特征 centroid 训练仅保留作基线对照。首轮 147 张公开照片的分组验证为 18/28（0.6429），未达 0.75 门槛，因此服务保持手动选择兜底。详见 `docs/recognition-evaluation.md`。这些公开照片尚不能代表湛江现场识别表现。
+当前默认服务检查 ResNet18 ONNX 模型及配套部署指标。用户已批准本地演示启用扩充照片训练的候选：网络照片作者隔离开发集 28/29（96.55%），模型和部署指标在本机 `artifacts/`，不会随 Git 提交。低置信度继续手动选择兜底，鸟类仍无真实模型。此结果不代表湛江现场识别表现；详见 `docs/recognition-open-photo-expansion-20261021.md`。原 centroid 训练仅保留作基线对照。
 
 ## 安装
 
@@ -45,7 +45,7 @@ python backend/recognition/train.py --root data/recognition --min-per-class 30 -
 - `backend/recognition/artifacts/baseline.npz`：基线模型参数（本地生成，不提交）
 - `backend/recognition/artifacts/baseline.metrics.json`：基线验证结果；不会覆盖 ONNX 模型的 `metrics.json`
 
-`validationSplit` 应显示为 `grouped-by-group_id`。服务加载默认 ONNX 模型前会校验 `readyForDemo: true`、`validationAccuracy >= 0.75`、模型 SHA-256 和四类物种目录一致性。基线和小样本评估都不能代表现场准确率，仍需用独立地点和现场手机照片复测。
+旧版模型的 `validationSplit` 为 `grouped-by-group_id`，扩充候选的部署指标为 `new-batch-photographer-holdout-no-historical-author-overlap`。服务加载默认 ONNX 模型前会校验模型版本、验证划分、`readyForDemo: true`、`validationAccuracy >= 0.75`、模型 SHA-256 和四类物种目录一致性。基线和小样本评估都不能代表现场准确率，仍需用独立地点和现场手机照片复测。
 
 ## 单张推理
 
@@ -71,4 +71,4 @@ python backend/recognition/api.py
 
 ## 当前状态
 
-仓库已登记 147 张公开许可的 iNaturalist 图片来源，图片本体因体积和许可管理被 `.gitignore` 忽略，只在采集机或约定的共享存储中保留。运行 `python tools/collect_training_images.py` 会先校验已有清单和 SHA-256；需要恢复缺失图片时显式加 `--restore`。这批公开图片的基线验证准确率仍低于 0.75，因此模型保持 `readyForDemo: false`，演示继续使用手动选择 / 地图模拟到点兜底。它们也不能替代湛江现场照片，正式验收还需要独立地点和真机样本。
+本机已安装扩充候选 ONNX 和对应部署指标。复现时先按 `docs/recognition-open-photo-expansion-20261021.md` 恢复三批许可照片，再运行 `tools/train_expanded_resnet18.py` 与 `tools/activate_expanded_model.py --local-demo`。`GET /api/health` 应返回 `mangroveModelReady: true`；无本地模型文件时仍返回 false 并走手动选择。现场验收尚未完成，前端对未知种和低置信度结果仍需允许手动纠正。

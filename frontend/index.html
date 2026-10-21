@@ -344,7 +344,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
       </svg>
       <span class="kicker">Zhanjiang Mangrove AR Tour</span>
       <h1>湛江红树林<em>AR</em>湿地导览</h1>
-      <p class="desc">对准红树与候鸟，浮层识别；拖动时间轴，看见一片湿地的过去、现在与修复愿景。</p>
+      <p class="desc">对准红树拍照识别，候鸟可手动收录；拖动时间轴，看见一片湿地的过去、现在与修复愿景。</p>
       <div class="hero-stats">
         <div class="hstat"><b id="statArea">~1万</b><span>公顷红树林(占全国约1/3)<i class="tag-mock">待核实</i></span></div>
         <div class="hstat"><b>11</b><span>种目标物种</span></div>
@@ -358,7 +358,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
       </span>
       <span>
         <h2>打开 AR 识别</h2>
-        <p>对准植物 · 鸟类 · 底栖生物，自动弹浮层</p>
+        <p>四类红树可拍照识别 · 其余物种手动选择</p>
       </span>
       <span class="go"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
     </button>
@@ -412,7 +412,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
 
     <div style="display:flex;gap:8px;justify-content:center;max-width:320px;margin:10px auto 0">
       <button class="cat-tab on" id="arModeMangrove">识别红树</button>
-      <button class="cat-tab" id="arModeBird">识别鸟类</button>
+      <button class="cat-tab" id="arModeBird">鸟类（手动）</button>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -423,7 +423,7 @@ textarea.note{width:100%;min-height:110px;border:1px solid var(--line);border-ra
       <div class="manual-grid" id="manualGrid"></div>
     </div>
 
-    <div class="demo-note">当前红树模型未达到演示就绪条件，鸟类模型尚未接入；拍照后若接口要求兜底，请手动选择物种。地图的到点卡片目前需手动模拟，尚未接入真实 GPS 触发。</div>
+    <div class="demo-note">四类红树模型已用于本机演示，网络照片测试结果不代表湛江现场准确率；低置信度请手动选择。鸟类模型尚未接入，地图的到点卡片目前需手动模拟。</div>
   </section>
 
   <!-- ===== 视图：物种详情 ===== -->
@@ -1044,9 +1044,7 @@ function todayStr(){var d=new Date();return d.getFullYear()+'-'+String(d.getMont
 
 /* ================= B 的接口客户端（docs/api.md v1，mock 优先，失败自动降级本地） ================= */
 var API_BASE=(function(){
-  var h=window.location.hostname||'';
   if(window.location.protocol==='file:')return 'http://127.0.0.1:8000/api';
-  if(window.location.protocol==='http:'&&(h==='localhost'||h==='127.0.0.1'))return 'http://127.0.0.1:8000/api';
   return '/api';
 })();
 var API_ID_MAP={

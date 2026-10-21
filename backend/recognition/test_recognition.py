@@ -3,12 +3,14 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import numpy as np
 
 from classifier import CentroidClassifier, FEATURE_SIZE, Image, file_sha256, image_feature
 from dataset import load_catalog, validate_dataset
-from api import model_is_ready, recognize
+from api import load_ready_model, model_is_ready, recognize
 from train import split_by_group, train
 
 
@@ -134,6 +136,29 @@ class DatasetTest(unittest.TestCase):
                 encoding="utf-8",
             )
             self.assertTrue(model_is_ready(output))
+
+    def test_expanded_local_demo_metrics_require_matching_model_and_split(self):
+        labels = [item["speciesId"] for item in load_catalog(ROOT / "data/species.catalog.json")]
+        with tempfile.TemporaryDirectory(dir=ROOT) as temporary:
+            output = Path(temporary) / "model.onnx"
+            output.write_bytes(b"test-model")
+            metrics_path = output.with_name("metrics.json")
+            metrics = {
+                "model": "resnet18-expanded-onnx-v1",
+                "validationSplit": "new-batch-photographer-holdout-no-historical-author-overlap",
+                "validationAccuracy": 0.9655,
+                "readyForDemo": True,
+                "classes": labels,
+                "modelSha256": file_sha256(output),
+            }
+            metrics_path.write_text(json.dumps(metrics), encoding="utf-8")
+            with patch("api.OnnxClassifier", return_value=SimpleNamespace(labels=labels)) as classifier:
+                model, _ = load_ready_model(output)
+                self.assertIsNotNone(model)
+                classifier.assert_called_once_with(output, labels)
+                metrics["validationSplit"] = "unknown-split"
+                metrics_path.write_text(json.dumps(metrics), encoding="utf-8")
+                self.assertFalse(model_is_ready(output))
 
     def test_classifier_predicts_nearest_class(self):
         features = np.vstack([np.zeros(FEATURE_SIZE), np.ones(FEATURE_SIZE)]).astype(np.float32)

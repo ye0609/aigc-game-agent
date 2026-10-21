@@ -27,6 +27,14 @@ MODEL_PATH = ROOT / "backend/recognition/artifacts/model.onnx"
 METRICS_PATH = ROOT / "backend/recognition/artifacts/metrics.json"
 CATALOG_PATH = ROOT / "data/species.catalog.json"
 CONFIDENCE_THRESHOLD = 0.65
+ONNX_VALIDATION_SPLITS = {
+    "resnet18-onnx-v1": {"grouped-by-group_id"},
+    # Explicit local demo activation for the expanded dataset. Its small,
+    # photographer-isolated online-photo development set is not field validation.
+    "resnet18-expanded-onnx-v1": {
+        "new-batch-photographer-holdout-no-historical-author-overlap",
+    },
+}
 
 
 def fallback_result(mode: str) -> dict:
@@ -83,9 +91,11 @@ def _load_ready_model_cached(model_path, metrics_path, model_mtime, model_size, 
     expected_labels = {item["speciesId"] for item in mangroves}
     if model_path.suffix == ".onnx":
         labels = metrics.get("classes")
+        model_version = metrics.get("model")
+        accepted_splits = ONNX_VALIDATION_SPLITS.get(model_version)
         if (
-            metrics.get("model") != "resnet18-onnx-v1"
-            or metrics.get("validationSplit") != "grouped-by-group_id"
+            accepted_splits is None
+            or metrics.get("validationSplit") not in accepted_splits
             or not isinstance(labels, list)
             or not all(isinstance(label, str) for label in labels)
         ):

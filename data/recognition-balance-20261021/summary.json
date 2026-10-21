@@ -1,0 +1,32 @@
+{
+  "mangrove-aegiceras-corniculatum": {
+    "photos": 59,
+    "groups": 59,
+    "photographers": 36
+  },
+  "mangrove-avicennia-marina": {
+    "photos": 58,
+    "groups": 58,
+    "photographers": 33
+  },
+  "mangrove-bruguiera-gymnorrhiza": {
+    "photos": 60,
+    "groups": 60,
+    "photographers": 35
+  },
+  "mangrove-kandelia-obovata": {
+    "photos": 43,
+    "groups": 43,
+    "photographers": 20
+  },
+  "_collection": {
+    "downloaded": 227,
+    "curated": 220,
+    "excluded": 7,
+    "licenses": [
+      "cc0",
+      "cc-by",
+      "cc-by-sa"
+    ]
+  }
+}

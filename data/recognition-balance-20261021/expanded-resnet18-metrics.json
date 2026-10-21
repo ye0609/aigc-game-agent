@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-21",
+  "architecture": "ResNet18",
+  "weights": "ImageNet1K_V1",
+  "seed": 20261022,
+  "epochs": 12,
+  "sources": [
+    "data/recognition",
+    "data/recognition-china-curated-20261021",
+    "data/recognition-balance-20261021"
+  ],
+  "sourceSha256": {
+    "data/recognition/sources.csv": "da0499f66ded2767f2b4bb96f21b428be203c11de269680b029320885a66caac",
+    "data/recognition-china-curated-20261021/sources.csv": "74ef6325f602ca19e3d8c36c028705e48187a71b590ccf19eb8621b8eeb428fb",
+    "data/recognition-balance-20261021/curated.csv": "a92fc7ba243338fcc44e97a3cbaa528d39cc0b11e9973b8d4df53fd06b19e280"
+  },
+  "trainingSamples": 485,
+  "developmentSamples": 29,
+  "trainingByClass": {
+    "mangrove-aegiceras-corniculatum": 89,
+    "mangrove-avicennia-marina": 160,
+    "mangrove-bruguiera-gymnorrhiza": 88,
+    "mangrove-kandelia-obovata": 148
+  },
+  "developmentByClass": {
+    "mangrove-aegiceras-corniculatum": 6,
+    "mangrove-bruguiera-gymnorrhiza": 9,
+    "mangrove-avicennia-marina": 8,
+    "mangrove-kandelia-obovata": 6
+  },
+  "developmentSplit": "new-batch photos only; photographers absent from all historical sources; no author overlap",
+  "developmentAuthors": [
+    "1084856",
+    "1781642",
+    "2007857",
+    "232540",
+    "979410"
+  ],
+  "developmentCorrect": 28,
+  "developmentAccuracy": 0.9655,
+  "perClassRecall": {
+    "mangrove-aegiceras-corniculatum": 1.0,
+    "mangrove-avicennia-marina": 0.875,
+    "mangrove-bruguiera-gymnorrhiza": 1.0,
+    "mangrove-kandelia-obovata": 1.0
+  },
+  "macroRecall": 0.9688,
+  "confusion": {
+    "mangrove-aegiceras-corniculatum": {
+      "mangrove-aegiceras-corniculatum": 6
+    },
+    "mangrove-avicennia-marina": {
+      "mangrove-aegiceras-corniculatum": 1,
+      "mangrove-avicennia-marina": 7
+    },
+    "mangrove-bruguiera-gymnorrhiza": {
+      "mangrove-bruguiera-gymnorrhiza": 9
+    },
+    "mangrove-kandelia-obovata": {
+      "mangrove-kandelia-obovata": 6
+    }
+  },
+  "onnxMaxLogitDifference": 3.81e-06,
+  "modelBytes": 44704752,
+  "modelSha256": "f01103b2ef2f4bb70c4ecce198c2849415a064de8c607c102c107631a7a070b9",
+  "candidateMeets75PercentDevelopmentGate": true,
+  "readyForDemo": false,
+  "warning": "This is an online-photo, photographer-held-out development result, not independent Zhanjiang field validation. The production model is not changed by this script.",
+  "onnxCpuBenchmark": {
+    "images": 29,
+    "repeats": 5,
+    "meanMsPerImage": 14.85,
+    "p95RepeatMeanMsPerImage": 15.02,
+    "note": "ONNX Runtime CPU full Python preprocess+inference for one image; excludes upload and network latency."
+  },
+  "classes": [
+    "mangrove-aegiceras-corniculatum",
+    "mangrove-avicennia-marina",
+    "mangrove-bruguiera-gymnorrhiza",
+    "mangrove-kandelia-obovata"
+  ]
+}
