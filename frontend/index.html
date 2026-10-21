@@ -1400,13 +1400,19 @@ function locateMe(){
       if(km<nearestKm){nearestKm=km;nearest=s}
     });
     if(button)button.disabled=false;
-    if(status)status.textContent='已定位 · 最近：'+(nearest?nearest.name+' '+formatKm(nearestKm):'—')+'（直线距离）';
+    if(selectedSiteId)updateGpsStatus(selectedSiteId);
+    else if(status)status.textContent='已定位 · 最近：'+(nearest?nearest.name+' '+formatKm(nearestKm):'—')+'；点击点位查看该点距离';
     renderMap();
     if(selectedSiteId)highlightRoute(selectedSiteId);
   },function(err){
     if(button)button.disabled=false;
     if(status)status.textContent='定位失败：'+(err&&err.message?err.message:'请检查 HTTPS 和定位权限');
   },{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+}
+function updateGpsStatus(siteId){
+  var status=$('#gpsStatus'),site=SITES.filter(function(item){return item.id===siteId})[0];
+  if(!status||!site||SITE_DISTANCE[siteId]==null)return;
+  status.textContent='已定位 · 距 '+site.name+' '+formatKm(SITE_DISTANCE[siteId])+'（直线距离）';
 }
 function renderMap(){
   $('#siteList').innerHTML=SITES.map(function(s){
@@ -1454,6 +1460,7 @@ function showSite(id){
       '<button class="btn btn-ghost-pine btn-sm" data-arrive="'+s.id+'">模拟到点</button>'+
     '</div>';
   highlightRoute(s.id);
+  updateGpsStatus(s.id);
   $('#siteDetail').style.display='block';
   $('#siteDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -1616,6 +1623,7 @@ function initCamera(){
 function stopCamera(){
   if(stream){stream.getTracks().forEach(function(track){track.stop()});stream=null}
   var video=$('#arVideo');if(video){video.srcObject=null;video.style.display='none'}
+  var shot=$('#shotCanvas');if(shot)shot.style.display='none';
   var empty=$('#arEmpty');if(empty)empty.style.display='flex';
   var frame=$('#arFrame'),scan=$('#scanLine');if(frame)frame.style.display='none';if(scan)scan.style.display='none';
 }
@@ -1627,12 +1635,13 @@ function takeShot(){
   try{
     cv.width=v.videoWidth||640;cv.height=v.videoHeight||480;
     cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);
-    cv.style.display='block';
+    cv.style.display='none';
   }catch(e){toast('无法截取画面，请重试');return}
   var f=$('#arFloat');if(f)f.style.display='none';
   $('#arScanning').style.display='flex';
   setScanText('正在识别物种…','正在请求识别接口');
   cv.toBlob(function(blob){
+    cv.style.display='none';
     if(!blob){finishScan();toast('无法截取画面，请重试');return}
     apiRecognize(blob,AR_MODE).then(function(data){
       finishScan();
@@ -1662,9 +1671,12 @@ function captureBlob(){
     try{
       cv.width=v.videoWidth||640;cv.height=v.videoHeight||480;
       cv.getContext('2d').drawImage(v,0,0,cv.width,cv.height);
-      cv.style.display='block';
+      cv.style.display='none';
     }catch(e){reject(e);return}
-    cv.toBlob(function(blob){blob?resolve(blob):reject(new Error('capture failed'))},'image/jpeg',0.85);
+    cv.toBlob(function(blob){
+      cv.style.display='none';
+      blob?resolve(blob):reject(new Error('capture failed'));
+    },'image/jpeg',0.85);
   });
 }
 var burstBusy=false;
