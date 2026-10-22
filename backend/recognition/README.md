@@ -69,6 +69,8 @@ python backend/recognition/api.py
 
 `confidence` 不是经过校准的概率。它可用于触发兜底，不能当作真实识别准确率；真实准确率只看独立验证集和现场测试。
 
+现场独立验收的 manifest 格式和评估命令见 `docs/field-evaluation.md`，脚本为 `tools/evaluate_field.py`。
+
 ## 当前状态
 
 本机已安装扩充候选 ONNX 和对应部署指标。复现时先按 `docs/recognition-open-photo-expansion-20261021.md` 恢复三批许可照片，再运行 `tools/train_expanded_resnet18.py` 与 `tools/activate_expanded_model.py --local-demo`。`GET /api/health` 应返回 `mangroveModelReady: true`；无本地模型文件时仍返回 false 并走手动选择。现场验收尚未完成，前端对未知种和低置信度结果仍需允许手动纠正。
